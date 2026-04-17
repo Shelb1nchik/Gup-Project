@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Регистрация | Girls und Panzer</title>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    background: linear-gradient(135deg, #0a0f1e 0%, #0c1222 100%);
+    color: #eef4ff;
+    font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.register-container {
+    background: rgba(25, 30, 45, 0.7);
+    backdrop-filter: blur(10px);
+    border-radius: 32px;
+    padding: 40px;
+    width: 380px;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 1.8rem;
+    background: linear-gradient(135deg, #fff, #e74c3c);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+.input-group {
+    margin-bottom: 20px;
+}
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+.password-wrapper {
+    position: relative;
+}
+.password-wrapper input {
+    width: 100%;
+    padding-right: 40px;
+}
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #aaa;
+    font-size: 18px;
+}
+input {
+    width: 100%;
+    padding: 12px 16px;
+    background: #1e2438;
+    border: 1px solid #2a3348;
+    border-radius: 24px;
+    color: white;
+    font-size: 1rem;
+    transition: 0.2s;
+}
+input:focus {
+    outline: none;
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 2px rgba(231,76,60,0.3);
+}
+button {
+    width: 100%;
+    background: linear-gradient(95deg, #e74c3c, #c0392b);
+    border: none;
+    padding: 12px;
+    border-radius: 40px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.2s;
+    margin-top: 10px;
+}
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(231,76,60,0.4);
+}
+.login-link {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 0.9rem;
+}
+.login-link a {
+    color: #e74c3c;
+    text-decoration: none;
+    font-weight: 500;
+}
+.login-link a:hover {
+    text-decoration: underline;
+}
+.error {
+    color: #e74c3c;
+    text-align: center;
+    margin-top: 12px;
+    font-size: 0.85rem;
+}
+.success {
+    color: #2c5f2d;
+    background: rgba(44, 95, 45, 0.2);
+    padding: 8px;
+    border-radius: 24px;
+    margin-top: 12px;
+    text-align: center;
+}
+</style>
+</head>
+<body>
+<div class="register-container">
+    <h1>📝 Регистрация</h1>
+    <div class="input-group">
+        <label>Логин</label>
+        <input type="text" id="username" placeholder="Придумайте логин" autocomplete="off">
+    </div>
+    <div class="input-group">
+        <label>Пароль</label>
+        <div class="password-wrapper">
+            <input type="password" id="password" placeholder="Введите пароль" maxlength="72" autocomplete="new-password">
+            <span class="toggle-password" onclick="togglePassword('password')">👁️</span>
+        </div>
+    </div>
+    <div class="input-group">
+        <label>Подтвердите пароль</label>
+        <div class="password-wrapper">
+            <input type="password" id="confirm_password" placeholder="Повторите пароль" maxlength="72" autocomplete="new-password">
+            <span class="toggle-password" onclick="togglePassword('confirm_password')">👁️</span>
+        </div>
+    </div>
+    <button id="registerBtn">Зарегистрироваться</button>
+    <div class="login-link">
+        Уже есть аккаунт? <a href="login.html">Войдите</a>
+    </div>
+    <div id="errorMsg" class="error"></div>
+    <div id="successMsg" class="success" style="display:none;"></div>
+</div>
+<script>
+const api = window.location.origin;
+
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    if (field.type === "password") {
+        field.type = "text";
+    } else {
+        field.type = "password";
+    }
+}
+
+// Принудительная очистка полей при загрузке страницы
+window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+    document.getElementById('confirm_password').value = '';
+});
+
+document.getElementById("registerBtn").onclick = async () => {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value;
+    const confirm = document.getElementById("confirm_password").value;
+    const errorDiv = document.getElementById("errorMsg");
+    const successDiv = document.getElementById("successMsg");
+    errorDiv.innerText = "";
+    successDiv.style.display = "none";
+
+    if (!username || !password || !confirm) {
+        errorDiv.innerText = "Заполните все поля";
+        return;
+    }
+    if (password !== confirm) {
+        errorDiv.innerText = "Пароли не совпадают";
+        return;
+    }
+    try {
+        const res = await fetch(`${api}/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password, confirm_password: confirm }),
+            credentials: 'include'  // чтобы сервер мог установить httpOnly cookie
+        });
+        const data = await res.json();
+        if (res.ok) {
+            // Не сохраняем токен в localStorage, так как он уже в httpOnly куке
+            successDiv.style.display = "block";
+            successDiv.innerText = "Регистрация успешна! Теперь вы можете войти.";
+            setTimeout(() => {
+                window.location.href = "login.html";
+            }, 2000);
+        } else {
+            errorDiv.innerText = data.detail || "Ошибка регистрации";
+        }
+    } catch (err) {
+        console.error(err);
+        errorDiv.innerText = "Ошибка соединения с сервером";
+    }
+};
+</script>
+</body>
+</html>

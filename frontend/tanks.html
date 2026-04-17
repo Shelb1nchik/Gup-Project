@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Танки | Girls und Panzer</title>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    background: linear-gradient(135deg, #0a0f1e 0%, #0c1222 100%);
+    color: #eef4ff;
+    font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    padding: 24px;
+}
+#openSidebarBtn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1100;
+    font-size: 26px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 40px;
+    transition: all 0.2s ease;
+}
+#openSidebarBtn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.02);
+}
+#sideMenu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    height: 100%;
+    background: rgba(20, 25, 40, 0.95);
+    backdrop-filter: blur(12px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 38px 16px;
+    display: none;
+    z-index: 1050;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+}
+#sideMenu ul {
+    list-style: none;
+    margin-top: 40px;
+}
+#sideMenu li {
+    margin: 24px 0;
+}
+#sideMenu button {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 12px;
+    border-radius: 32px;
+    color: white;
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.2s;
+    text-align: left;
+    padding-left: 20px;
+}
+#sideMenu button:hover {
+    background: rgba(231, 76, 60, 0.7);
+    border-color: #e74c3c;
+    transform: translateX(6px);
+}
+.container {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding-top: 20px;
+}
+h1 {
+    text-align: center;
+    font-size: 2.2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #fff, #e74c3c);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 24px;
+}
+.pagination-controls {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+.pagination-controls label {
+    font-weight: 500;
+}
+#itemsPerPage {
+    background: #1e2438;
+    border: 1px solid #2a3348;
+    border-radius: 40px;
+    padding: 8px 16px;
+    color: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+.tanks-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(25, 30, 45, 0.6);
+    backdrop-filter: blur(4px);
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+.tanks-table th,
+.tanks-table td {
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.tanks-table th {
+    background: rgba(0, 0, 0, 0.4);
+    font-weight: 600;
+    color: #e74c3c;
+    font-size: 1rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+}
+.tanks-table th:hover {
+    background: rgba(231, 76, 60, 0.2);
+}
+.tanks-table tr:hover {
+    background: rgba(231, 76, 60, 0.05);
+}
+.tank-type {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 40px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-shadow: none;
+}
+.type-lt {
+    background: #ffeeee;
+    color: #4a2a2a;
+    border: 1px solid #e0b0b0;
+}
+.type-st {
+    background: #ffaaaa;
+    color: #5e2a2a;
+    border: 1px solid #d88;
+}
+.type-tt {
+    background: #ff6666;
+    color: #ffffff;
+    border: 1px solid #b33;
+}
+.type-pt {
+    background: #bde9b5;
+    color: #2a5e2a;
+    border: 1px solid #8cba80;
+}
+.sort-indicator {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 0.7rem;
+}
+
+/* ========== СТИЛИ ВСПЛЫВАЮЩЕГО ТУЛТИПА С ФОТО ========== */
+.tank-tooltip {
+    position: fixed;
+    z-index: 9999;
+    background: rgba(18, 24, 38, 0.95);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    padding: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    max-width: 300px;
+    text-align: center;
+}
+.tank-tooltip img {
+    max-width: 250px;
+    max-height: 180px;
+    border-radius: 12px;
+    border: 1px solid #555;
+    margin-bottom: 6px;
+}
+.tank-tooltip .tooltip-name {
+    font-weight: bold;
+    color: #e74c3c;
+    font-size: 0.85rem;
+}
+/* ================================================ */
+
+/* ========== СТИЛЬ БЛОКА АВТОРИЗАЦИИ ========== */
+.user-info {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(10, 15, 30, 0.65);
+    backdrop-filter: blur(12px);
+    padding: 6px 18px;
+    border-radius: 60px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+.user-info:hover {
+    border-color: rgba(231, 76, 60, 0.5);
+    background: rgba(10, 15, 30, 0.8);
+}
+#userNameDisplay {
+    background: rgba(0, 0, 0, 0.45);
+    padding: 6px 14px;
+    border-radius: 40px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #fff;
+    letter-spacing: 0.3px;
+    backdrop-filter: blur(4px);
+    white-space: nowrap;
+}
+.auth-buttons {
+    display: flex;
+    gap: 10px;
+}
+.auth-buttons button {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 7px 18px;
+    border-radius: 40px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: inherit;
+    color: #f0f0f0;
+    transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.auth-buttons button:hover {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    border-color: rgba(255, 255, 255, 0.7);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 18px rgba(231, 76, 60, 0.4);
+    color: white;
+}
+#logoutBtn {
+    background: rgba(192, 57, 43, 0.7);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+#logoutBtn:hover {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    transform: translateY(-2px);
+}
+/* ======================================== */
+
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #1a1f2e;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+    background: #e74c3c;
+    border-radius: 10px;
+}
+@media (max-width: 700px) {
+    .tanks-table th, .tanks-table td {
+        padding: 10px 8px;
+        font-size: 0.8rem;
+    }
+    .container {
+        padding: 0 10px;
+    }
+    .user-info {
+        top: 12px;
+        right: 12px;
+        padding: 4px 12px;
+        gap: 8px;
+    }
+    .auth-buttons {
+        gap: 6px;
+    }
+    .auth-buttons button {
+        padding: 5px 12px;
+        font-size: 0.75rem;
+        gap: 4px;
+    }
+    #userNameDisplay {
+        padding: 4px 10px;
+        font-size: 0.75rem;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="user-info">
+    <span id="userNameDisplay" style="display: none;"></span>
+    <div class="auth-buttons">
+        <button id="loginBtn" style="display: none;">Войти</button>
+        <button id="registerBtn" style="display: none;">Регистрация</button>
+        <button id="logoutBtn" style="display: none;">Выйти</button>
+    </div>
+</div>
+
+<button id="openSidebarBtn">☰</button>
+<div id="sideMenu">
+    <ul>
+        <li><button id="schoolsBtn">🏫 Школы</button></li>
+        <li><button id="matchesBtn">📅 Матчи</button></li>
+        <li><button id="tanksBtn">🛸 Танки</button></li>
+        <li><button id="wheelBtn">🎡 Колесо</button></li>
+        <li><button id="importBtn">📦 Импорт</button></li>
+        <li><button id="logsBtn">📜 Логи</button></li>
+        <li><button id="mapBtn">🗺️ Карта GuP</button></li>
+        <li><button id="ratingBtn">📊 Рейтинг</button></li>
+        <li id="adminMenuItem" style="display: none;"><button id="adminBtn">👑 Админ-панель</button></li>
+    </ul>
+</div>
+
+<div class="container">
+    <h1>🛸 Список танков</h1>
+    <div class="pagination-controls">
+        <label>Показывать:</label>
+        <select id="itemsPerPage">
+            <option value="15">15</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+            <option value="all">Все</option>
+        </select>
+    </div>
+    <div class="table-wrapper">
+        <table class="tanks-table" id="tanksTable">
+            <thead>
+                <tr>
+                    <th data-sort="name">Название <span class="sort-indicator">▼</span></th>
+                    <th data-sort="br">БР <span class="sort-indicator"></span></th>
+                    <th data-sort="price">Цена <span class="sort-indicator"></span></th>
+                    <th data-sort="rank">Ранг <span class="sort-indicator"></span></th>
+                    <th data-sort="type">Тип <span class="sort-indicator"></span></th>
+                </tr>
+            </thead>
+            <tbody id="tanksTableBody">
+                <tr><td colspan="5">Загрузка...<\/td><\/tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+const api = window.location.origin;
+
+// Ключ — точное название танка как в базе данных, значение — URL картинки.
+const tankPhotos = {
+    "Т-34-85 СТП" : "images/tanks/Т-34-85 СТП.png",
+    "Tiger II (H)": "images/tanks/Tiger II H.png",
+    "Centurion Mk.3": "images/tanks/Centurion 3.png",
+    "E-100": "images/tanks/E-100.png",
+    "Maus": "images/tanks/Maus.png",
+    "ИС-6": "images/tanks/IS-6.png",
+    "Panther II": "images/tanks/panther ii.png",
+    "Tiger II (H) 10.5cm": "images/tanks/Tiger 105.png",
+    "ИС-3": "images/tanks/IS-3.png",
+    "Ho-Ri Production": "images/tanks/Ho-Ri Production.png",
+    "T29": "images/tanks/T29.png",
+    "Т-44-100": "images/tanks/T-44-100.png",
+    "T95": "images/tanks/T95.png",
+    "T26E1-1": "images/tanks/T26E1-1.png",
+    "T34": "images/tanks/T34.png",
+    "T30": "images/tanks/T30.png",
+    "Jagdtiger": "images/tanks/Jagdtiger.png",
+    "Tiger II (H) Sla.16": "images/tanks/Tiger II (H) Sla.16.png",
+    "ИС-2 (1944)": "images/tanks/IS-2 1944.png",
+    "Tortoise": "images/tanks/Tortoise.png",
+    "T28": "images/tanks/T28.png",
+    "Jagdpanther G1": "images/tanks/Jagdpanther G1.png",
+    "Т-44": "images/tanks/T-44.png",
+    "Т-34-100": "images/tanks/Т-34-100.png",
+    "Tiger II (P)": "images/tanks/Tiger II (P).png",
+    "M26E1": "images/tanks/M26E1.png",
+<!--    "Т-44-100": "images/tanks/T-44-100.png",-->
+<!--    "Т-44-100": "images/tanks/T-44-100.png",-->
+<!--    "Т-44-100": "images/tanks/T-44-100.png",-->
+<!--    "Т-44-100": "images/tanks/T-44-100.png",-->
+<!--    "Т-44-100": "images/tanks/T-44-100.png",-->
+<!--    "Т-44-100": "images/tanks/T-44-100.png",-->
+<!--    "Т-44-100": "images/tanks/T-44-100.png",-->
+<!--    "Т-44-100": "images/tanks/T-44-100.png",-->
+<!--    "Т-44-100": "images/tanks/T-44-100.png",-->
+
+
+
+};
+// =================================================================================
+
+let tooltip = null;
+
+function createTooltip() {
+    const div = document.createElement('div');
+    div.className = 'tank-tooltip';
+    div.style.display = 'none';
+    document.body.appendChild(div);
+    return div;
+}
+
+function showTooltip(tankName, clientX, clientY) {
+    if (!tooltip) tooltip = createTooltip();
+    const photoUrl = tankPhotos[tankName];
+    if (!photoUrl) {
+        tooltip.style.display = 'none';
+        return;
+    }
+    tooltip.innerHTML = `
+        <img src="${photoUrl}" alt="${tankName}" onerror="this.onerror=null; this.parentElement.parentElement.style.display='none';">
+        <div class="tooltip-name">${tankName}</div>
+    `;
+    tooltip.style.display = 'block';
+    // Позиционирование
+    let left = clientX + 15;
+    let top = clientY + 15;
+    const rect = tooltip.getBoundingClientRect();
+    if (left + rect.width > window.innerWidth) {
+        left = clientX - rect.width - 15;
+    }
+    if (top + rect.height > window.innerHeight) {
+        top = clientY - rect.height - 15;
+    }
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
+}
+
+function hideTooltip() {
+    if (tooltip) tooltip.style.display = 'none';
+}
+
+// ---------- Авторизация (без изменений) ----------
+async function authFetch(url, options = {}) {
+    const headers = { "Content-Type": "application/json", ...options.headers };
+    return fetch(url, { ...options, headers, credentials: 'include' });
+}
+
+let currentUserIsAdmin = false;
+
+async function updateAuthUI() {
+    const userNameSpan = document.getElementById("userNameDisplay");
+    const loginBtn = document.getElementById("loginBtn");
+    const registerBtn = document.getElementById("registerBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const adminMenuItem = document.getElementById("adminMenuItem");
+
+    try {
+        const res = await authFetch(`${api}/me`);
+        if (res.ok) {
+            const user = await res.json();
+            if (userNameSpan) {
+                userNameSpan.textContent = user.username;
+                userNameSpan.style.display = "inline-block";
+            }
+            if (loginBtn) loginBtn.style.display = "none";
+            if (registerBtn) registerBtn.style.display = "none";
+            if (logoutBtn) logoutBtn.style.display = "inline-flex";
+            currentUserIsAdmin = user.is_admin || false;
+            if (adminMenuItem) adminMenuItem.style.display = currentUserIsAdmin ? "block" : "none";
+        } else {
+            // Не авторизован
+            if (userNameSpan) userNameSpan.style.display = "none";
+            if (loginBtn) loginBtn.style.display = "inline-flex";
+            if (registerBtn) registerBtn.style.display = "inline-flex";
+            if (logoutBtn) logoutBtn.style.display = "none";
+            if (adminMenuItem) adminMenuItem.style.display = "none";
+            currentUserIsAdmin = false;
+        }
+    } catch (err) {
+        console.error(err);
+        // При ошибке сети считаем неавторизованным
+        if (userNameSpan) userNameSpan.style.display = "none";
+        if (loginBtn) loginBtn.style.display = "inline-flex";
+        if (registerBtn) registerBtn.style.display = "inline-flex";
+        if (logoutBtn) logoutBtn.style.display = "none";
+        if (adminMenuItem) adminMenuItem.style.display = "none";
+        currentUserIsAdmin = false;
+    }
+}
+
+document.getElementById("loginBtn")?.addEventListener("click", () => {
+    window.location.href = "login.html";
+});
+document.getElementById("registerBtn")?.addEventListener("click", () => {
+    window.location.href = "register.html";
+});
+document.getElementById("logoutBtn").onclick = async () => {
+    await authFetch(`${api}/logout`, { method: "POST" });
+    updateAuthUI();
+    loadSchools();
+};
+
+// ---------- Сайдбар ----------
+const sideMenu = document.getElementById("sideMenu");
+const openSidebarBtn = document.getElementById("openSidebarBtn");
+openSidebarBtn.onclick = () => {
+    sideMenu.style.display = sideMenu.style.display === "block" ? "none" : "block";
+};
+document.getElementById("schoolsBtn").onclick = () => { window.location.href = "index.html"; };
+document.getElementById("matchesBtn").onclick = () => { window.location.href = "matches.html"; };
+document.getElementById("tanksBtn").onclick = () => { window.location.href = "tanks.html"; };
+document.getElementById("wheelBtn").onclick = () => { window.location.href = "wheel.html"; };
+document.getElementById("importBtn").onclick = () => { window.location.href = "import.html"; };
+document.getElementById("adminBtn").onclick = () => { window.location.href = "admin.html"; };
+document.getElementById("logsBtn").onclick = () => { window.location.href = "logs.html"; };
+document.getElementById("ratingBtn").onclick = () => {window.location.href = "rating.html"; };
+document.getElementById("mapBtn").onclick = () => {window.location.href = "japan_map.html"; };
+
+// ---------- Логика таблицы ----------
+const itemsPerPageSelect = document.getElementById("itemsPerPage");
+const tableBody = document.getElementById("tanksTableBody");
+const headers = document.querySelectorAll("#tanksTable th");
+
+let allTanks = [];
+let sortedTanks = [];
+let currentDisplayLimit = 15;
+let currentSort = { field: "br", order: "asc" };
+
+function sortTanks(tanks, field, order) {
+    const sorted = [...tanks];
+    sorted.sort((a, b) => {
+        let valA, valB;
+        switch (field) {
+            case "name":
+                valA = a.name.toLowerCase();
+                valB = b.name.toLowerCase();
+                break;
+            case "br":
+                valA = a.br ?? 0;
+                valB = b.br ?? 0;
+                break;
+            case "price":
+                valA = a.price ?? 0;
+                valB = b.price ?? 0;
+                break;
+            case "rank":
+                valA = a.rank ?? 0;
+                valB = b.rank ?? 0;
+                break;
+            case "type":
+                valA = a.type || "";
+                valB = b.type || "";
+                break;
+            default:
+                return 0;
+        }
+        if (valA < valB) return order === "asc" ? -1 : 1;
+        if (valA > valB) return order === "asc" ? 1 : -1;
+        return 0;
+    });
+    return sorted;
+}
+
+function updateSortIndicators() {
+    headers.forEach(th => {
+        const field = th.getAttribute("data-sort");
+        const indicatorSpan = th.querySelector(".sort-indicator");
+        if (field === currentSort.field) {
+            indicatorSpan.textContent = currentSort.order === "asc" ? "▲" : "▼";
+        } else {
+            indicatorSpan.textContent = "";
+        }
+    });
+}
+
+function renderTanks() {
+    let tanksToShow = (currentDisplayLimit === 'all' || currentDisplayLimit === Infinity)
+        ? sortedTanks
+        : sortedTanks.slice(0, currentDisplayLimit);
+
+    if (!tanksToShow.length) {
+        tableBody.innerHTML = '<tr><td colspan="5">Нет данных<\/td><\/tr>';
+        return;
+    }
+
+    tableBody.innerHTML = "";
+    tanksToShow.forEach(tank => {
+        const row = document.createElement("tr");
+
+        // Создаём ячейку с названием (именно на неё будем вешать тултип)
+        const nameCell = document.createElement("td");
+        nameCell.textContent = tank.name;
+        nameCell.addEventListener("mouseenter", (e) => {
+            showTooltip(tank.name, e.clientX, e.clientY);
+        });
+        nameCell.addEventListener("mousemove", (e) => {
+            if (tooltip && tooltip.style.display === 'block') {
+                let left = e.clientX + 15;
+                let top = e.clientY + 15;
+                const rect = tooltip.getBoundingClientRect();
+                if (left + rect.width > window.innerWidth) {
+                    left = e.clientX - rect.width - 15;
+                }
+                if (top + rect.height > window.innerHeight) {
+                    top = e.clientY - rect.height - 15;
+                }
+                tooltip.style.left = left + 'px';
+                tooltip.style.top = top + 'px';
+            }
+        });
+        nameCell.addEventListener("mouseleave", () => {
+            hideTooltip();
+        });
+        row.appendChild(nameCell);
+
+        // Остальные ячейки (без тултипа)
+        const brCell = document.createElement("td");
+        brCell.textContent = tank.br !== undefined ? tank.br : "—";
+        row.appendChild(brCell);
+
+        const priceCell = document.createElement("td");
+        priceCell.textContent = tank.price !== undefined ? tank.price.toLocaleString() : "—";
+        row.appendChild(priceCell);
+
+        const rankCell = document.createElement("td");
+        rankCell.textContent = tank.rank !== undefined ? tank.rank : "—";
+        row.appendChild(rankCell);
+
+        const typeCell = document.createElement("td");
+        let typeClass = "";
+        switch (tank.type) {
+            case "ЛТ": typeClass = "type-lt"; break;
+            case "СТ": typeClass = "type-st"; break;
+            case "ТТ": typeClass = "type-tt"; break;
+            case "ПТ": typeClass = "type-pt"; break;
+            default: typeClass = "";
+        }
+        const typeSpan = document.createElement("span");
+        typeSpan.className = `tank-type ${typeClass}`;
+        typeSpan.textContent = tank.type || "—";
+        typeCell.appendChild(typeSpan);
+        row.appendChild(typeCell);
+
+        tableBody.appendChild(row);
+    });
+}
+
+function applySortAndRender() {
+    sortedTanks = sortTanks(allTanks, currentSort.field, currentSort.order);
+    renderTanks();
+    updateSortIndicators();
+}
+
+async function loadTanks() {
+    try {
+        const res = await fetch(`${api}/tanks/`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        allTanks = data;
+        currentSort = { field: "br", order: "asc" };
+        sortedTanks = sortTanks(allTanks, "br", "asc");
+        renderTanks();
+        updateSortIndicators();
+    } catch (err) {
+        console.error("Ошибка загрузки танков:", err);
+        tableBody.innerHTML = '<tr><td colspan="5">❌ Не удалось загрузить танки. Проверьте сервер.<\/td><\/tr>';
+    }
+}
+
+headers.forEach(th => {
+    th.addEventListener("click", () => {
+        const field = th.getAttribute("data-sort");
+        if (currentSort.field === field) {
+            currentSort.order = currentSort.order === "asc" ? "desc" : "asc";
+        } else {
+            currentSort.field = field;
+            currentSort.order = "asc";
+        }
+        applySortAndRender();
+    });
+});
+
+itemsPerPageSelect.addEventListener("change", (e) => {
+    const val = e.target.value;
+    if (val === "all") {
+        currentDisplayLimit = Infinity;
+    } else {
+        currentDisplayLimit = parseInt(val, 10);
+    }
+    renderTanks();
+});
+
+// Запуск
+updateAuthUI().then(loadTanks);
+</script>
+</body>
+</html>

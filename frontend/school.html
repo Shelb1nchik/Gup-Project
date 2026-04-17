@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>School | Girls und Panzer</title>
+<style>
+/* ... все ваши стили остаются без изменений ... */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    background: linear-gradient(135deg, #0a0f1e 0%, #0c1222 100%);
+    color: #eef4ff;
+    font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+    position: relative;
+}
+#openSidebarBtn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1100;
+    font-size: 26px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 40px;
+    transition: all 0.2s ease;
+}
+#openSidebarBtn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.02);
+}
+#sideMenu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    height: 100%;
+    background: rgba(20, 25, 40, 0.95);
+    backdrop-filter: blur(12px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 70px 16px 38px 16px;
+    display: none;
+    z-index: 1050;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+}
+#sideMenu ul {
+    list-style: none;
+    margin-top: 0;
+}
+#sideMenu li {
+    margin: 20px 0;
+}
+#sideMenu button {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 12px;
+    border-radius: 32px;
+    color: white;
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.2s;
+    text-align: left;
+    padding-left: 20px;
+}
+#sideMenu button:hover {
+    background: rgba(231, 76, 60, 0.7);
+    border-color: #e74c3c;
+    transform: translateX(6px);
+}
+.container {
+    width: 100%;
+    margin-top: 40px;
+    background: rgba(25, 30, 45, 0.5);
+    backdrop-filter: blur(4px);
+    border-radius: 36px;
+    padding: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    position: relative;
+    z-index: 1;
+}
+.glow-container {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    border-radius: 42px;
+    transition: all 0.3s;
+    position: relative;
+}
+/* ... анимации обводки (оставляем как было) ... */
+.glow-pravda { border: 3px solid #ff0000; box-shadow: 0 0 15px #ff0000, 0 0 30px #ff0000; animation: pulseRed 1.5s infinite; }
+@keyframes pulseRed { 0% { border-color: #ff0000; box-shadow: 0 0 5px #ff0000; } 50% { border-color: #ff6666; box-shadow: 0 0 25px #ff0000; } 100% { border-color: #ff0000; box-shadow: 0 0 5px #ff0000; } }
+.glow-ooarai { border: 3px solid #5ca3d7; box-shadow: 0 0 15px #5ca3d7, 0 0 30px #5ca3d7; animation: pulseBlue 1.5s infinite; }
+@keyframes pulseBlue { 0% { border-color: #5ca3d7; box-shadow: 0 0 5px #5ca3d7; } 50% { border-color: #8bc9ff; box-shadow: 0 0 25px #5ca3d7; } 100% { border-color: #5ca3d7; box-shadow: 0 0 5px #5ca3d7; } }
+.glow-kuromorimine { border: 3px solid #434b4d; box-shadow: 0 0 15px #434b4d, 0 0 30px #434b4d; animation: pulseGray 1.5s infinite; }
+@keyframes pulseGray { 0% { border-color: #434b4d; box-shadow: 0 0 5px #434b4d; } 50% { border-color: #6b7a7c; box-shadow: 0 0 25px #6b7a7c; } 100% { border-color: #434b4d; box-shadow: 0 0 5px #434b4d; } }
+.glow-saunders { border: 3px solid #4b5320; box-shadow: 0 0 15px #4b5320, 0 0 30px #4b5320; animation: pulseGreen 1.5s infinite; }
+@keyframes pulseGreen { 0% { border-color: #4b5320; box-shadow: 0 0 5px #4b5320; } 50% { border-color: #7b8c3a; box-shadow: 0 0 25px #7b8c3a; } 100% { border-color: #4b5320; box-shadow: 0 0 5px #4b5320; } }
+.glow-stgloriana { border: 3px solid #e27988; box-shadow: 0 0 15px #e27988, 0 0 30px #e27988; animation: pulsePink 1.5s infinite; }
+@keyframes pulsePink { 0% { border-color: #e27988; box-shadow: 0 0 5px #e27988; } 50% { border-color: #ffa0b0; box-shadow: 0 0 25px #ffa0b0; } 100% { border-color: #e27988; box-shadow: 0 0 5px #e27988; } }
+.glow-anzio { border: 3px solid #295733; box-shadow: 0 0 15px #295733, 0 0 30px #295733; animation: pulseDarkGreen 1.5s infinite; }
+@keyframes pulseDarkGreen { 0% { border-color: #295733; box-shadow: 0 0 5px #295733; } 50% { border-color: #3d7a4a; box-shadow: 0 0 25px #3d7a4a; } 100% { border-color: #295733; box-shadow: 0 0 5px #295733; } }
+.glow-bcfreedom { border: 3px solid #4c78b9; box-shadow: 0 0 15px #4c78b9, 0 0 30px #4c78b9; animation: pulseBlue2 1.5s infinite; }
+@keyframes pulseBlue2 { 0% { border-color: #4c78b9; box-shadow: 0 0 5px #4c78b9; } 50% { border-color: #7aa0d6; box-shadow: 0 0 25px #7aa0d6; } 100% { border-color: #4c78b9; box-shadow: 0 0 5px #4c78b9; } }
+.glow-chihatan { border: 3px solid #816051; box-shadow: 0 0 15px #816051, 0 0 30px #816051; animation: pulseBrown 1.5s infinite; }
+@keyframes pulseBrown { 0% { border-color: #816051; box-shadow: 0 0 5px #816051; } 50% { border-color: #b08a78; box-shadow: 0 0 25px #b08a78; } 100% { border-color: #816051; box-shadow: 0 0 5px #816051; } }
+.glow-bellwall { border: 3px solid #f6b26b; box-shadow: 0 0 15px #f6b26b, 0 0 30px #f6b26b; animation: pulseOrange 1.5s infinite; }
+@keyframes pulseOrange { 0% { border-color: #f6b26b; box-shadow: 0 0 5px #f6b26b; } 50% { border-color: #ffcc88; box-shadow: 0 0 25px #ffcc88; } 100% { border-color: #f6b26b; box-shadow: 0 0 5px #f6b26b; } }
+.glow-jatkosota { border: 3px solid #b3c6d5; box-shadow: 0 0 15px #b3c6d5, 0 0 30px #b3c6d5; animation: pulseLightBlue 1.5s infinite; }
+@keyframes pulseLightBlue { 0% { border-color: #b3c6d5; box-shadow: 0 0 5px #b3c6d5; } 50% { border-color: #d0e4f0; box-shadow: 0 0 25px #d0e4f0; } 100% { border-color: #b3c6d5; box-shadow: 0 0 5px #b3c6d5; } }
+.glow-viggen { border: 3px solid #fecb02; box-shadow: 0 0 15px #fecb02, 0 0 30px #fecb02; animation: pulseYellow 1.5s infinite; }
+@keyframes pulseYellow { 0% { border-color: #fecb02; box-shadow: 0 0 5px #fecb02; } 50% { border-color: #ffdd55; box-shadow: 0 0 25px #ffdd55; } 100% { border-color: #fecb02; box-shadow: 0 0 5px #fecb02; } }
+.glow-yogurt { border: 3px solid #01a863; box-shadow: 0 0 15px #01a863, 0 0 30px #01a863; animation: pulseTeal 1.5s infinite; }
+@keyframes pulseTeal { 0% { border-color: #01a863; box-shadow: 0 0 5px #01a863; } 50% { border-color: #33cc88; box-shadow: 0 0 25px #33cc88; } 100% { border-color: #01a863; box-shadow: 0 0 5px #01a863; } }
+.glow-allstars { border: 3px solid #9abbe4; box-shadow: 0 0 15px #9abbe4, 0 0 30px #9abbe4; animation: pulseAllStars 1.5s infinite; }
+@keyframes pulseAllStars { 0% { border-color: #9abbe4; box-shadow: 0 0 5px #9abbe4; } 50% { border-color: #c0d6f0; box-shadow: 0 0 25px #c0d6f0; } 100% { border-color: #9abbe4; box-shadow: 0 0 5px #9abbe4; } }
+.glow-gradient { border: 3px solid transparent; border-image: linear-gradient(270deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3); border-image-slice: 1; animation: gradientShift 6s ease infinite; }
+@keyframes gradientShift { 0% { border-image-source: linear-gradient(270deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3); } 50% { border-image-source: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3); } 100% { border-image-source: linear-gradient(270deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3); } }
+.school-name {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #fff, #e74c3c);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-align: center;
+    margin-bottom: 16px;
+}
+.balance-card {
+    background: rgba(0,0,0,0.3);
+    border-radius: 60px;
+    padding: 12px 24px;
+    text-align: center;
+    width: fit-content;
+    margin: 0 auto 24px auto;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+.balance-card span {
+    color: #f1c40f;
+    font-size: 1.6rem;
+}
+h3 {
+    font-size: 1.5rem;
+    margin: 24px 0 16px 0;
+    color: #e74c3c;
+    border-left: 4px solid #e74c3c;
+    padding-left: 16px;
+}
+.table-controls {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 16px;
+}
+.table-controls label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+#itemsPerPage {
+    background: #1e2438;
+    border: 1px solid #2a3348;
+    border-radius: 40px;
+    padding: 6px 12px;
+    color: white;
+    cursor: pointer;
+}
+.tanks-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(0,0,0,0.3);
+    border-radius: 20px;
+    overflow: hidden;
+}
+.tanks-table th, .tanks-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.tanks-table th {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+}
+.tanks-table th:hover {
+    background: rgba(231, 76, 60, 0.4);
+}
+.tanks-table tr {
+    cursor: pointer;
+}
+.tanks-table tr:hover {
+    background: rgba(231, 76, 60, 0.1);
+}
+.sort-indicator {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 0.7rem;
+}
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+}
+.pagination button {
+    background: #2c5f2d;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 40px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.pagination button:hover {
+    background: #1e3a1e;
+    transform: scale(1.02);
+}
+.action-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin: 30px 0 20px;
+    flex-wrap: wrap;
+}
+.action-buttons button {
+    background: #e74c3c;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 40px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.action-buttons button:hover {
+    background: #c0392b;
+    transform: translateY(-2px);
+}
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(8px);
+}
+.modal-content {
+    background: #121826;
+    margin: 10% auto;
+    padding: 28px;
+    border-radius: 32px;
+    width: 450px;
+    max-width: 90%;
+    border: 1px solid rgba(255,255,255,0.1);
+    position: relative;
+}
+.modal-content h3 {
+    margin-top: 0;
+    border-left: none;
+    text-align: center;
+}
+.close {
+    position: absolute;
+    top: 12px;
+    right: 20px;
+    font-size: 28px;
+    cursor: pointer;
+    color: #aaa;
+}
+.close:hover {
+    color: #e74c3c;
+}
+.modal-content label {
+    display: block;
+    margin-top: 12px;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+.modal-content input, .modal-content select {
+    width: 100%;
+    background: #1e2438;
+    border: 1px solid #2a3348;
+    border-radius: 40px;
+    padding: 8px 12px;
+    color: white;
+}
+.modal-content button {
+    background: #e74c3c;
+    width: 100%;
+    margin-top: 20px;
+    padding: 10px;
+    border-radius: 40px;
+    font-weight: bold;
+}
+#upgradeSelectDiv {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #2a3348;
+}
+#upgradeTargetSelect {
+    margin-bottom: 8px;
+}
+#confirmUpgradeBtn {
+    background: #e67e22;
+}
+.background-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 16px;
+    max-height: 500px;
+    overflow-y: auto;
+    margin: 20px 0;
+}
+.background-option {
+    cursor: pointer;
+    border: 3px solid transparent;
+    border-radius: 16px;
+    overflow: hidden;
+    transition: 0.2s;
+}
+.background-option:hover {
+    transform: scale(1.02);
+    border-color: #e74c3c;
+}
+.background-option img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+}
+.background-option span {
+    display: block;
+    text-align: center;
+    padding: 6px;
+    font-size: 0.75rem;
+}
+.user-info {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(10, 15, 30, 0.65);
+    backdrop-filter: blur(12px);
+    padding: 6px 18px;
+    border-radius: 60px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+.user-info:hover {
+    border-color: rgba(231, 76, 60, 0.5);
+    background: rgba(10, 15, 30, 0.8);
+}
+#userNameDisplay {
+    background: rgba(0, 0, 0, 0.45);
+    padding: 6px 14px;
+    border-radius: 40px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #fff;
+    letter-spacing: 0.3px;
+    backdrop-filter: blur(4px);
+    white-space: nowrap;
+}
+.auth-buttons {
+    display: flex;
+    gap: 10px;
+}
+.auth-buttons button {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 7px 18px;
+    border-radius: 40px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: inherit;
+    color: #f0f0f0;
+    transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.auth-buttons button:hover {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    border-color: rgba(255, 255, 255, 0.7);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 18px rgba(231, 76, 60, 0.4);
+    color: white;
+}
+#logoutBtn {
+    background: rgba(192, 57, 43, 0.7);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+#logoutBtn:hover {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    transform: translateY(-2px);
+}
+.bg-image {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.bg-image video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #1a1f2e;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+    background: #e74c3c;
+    border-radius: 10px;
+}
+@media (max-width: 700px) {
+    .container {
+        padding: 20px;
+    }
+    .tanks-table th, .tanks-table td {
+        padding: 8px 10px;
+        font-size: 0.8rem;
+    }
+    .action-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    .user-info {
+        top: 12px;
+        right: 12px;
+        padding: 4px 12px;
+        gap: 8px;
+    }
+    .auth-buttons {
+        gap: 6px;
+    }
+    .auth-buttons button {
+        padding: 5px 12px;
+        font-size: 0.75rem;
+        gap: 4px;
+    }
+    #userNameDisplay {
+        padding: 4px 10px;
+        font-size: 0.75rem;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-image" id="bgImage"></div>
+
+<div class="user-info">
+    <span id="userNameDisplay" style="display: none;"></span>
+    <div class="auth-buttons">
+        <button id="loginBtn" style="display: none;">Войти</button>
+        <button id="registerBtn" style="display: none;">Регистрация</button>
+        <button id="logoutBtn" style="display: none;">Выйти</button>
+    </div>
+</div>
+
+<button id="openSidebarBtn">☰</button>
+<div id="sideMenu">
+    <ul>
+        <li><button id="schoolsBtn">🏫 Школы</button></li>
+        <li><button id="matchesBtn">📅 Матчи</button></li>
+        <li><button id="tanksBtn">🛸 Танки</button></li>
+        <li><button id="wheelBtn">🎡 Колесо</button></li>
+        <li><button id="importBtn">📦 Импорт</button></li>
+        <li><button id="logsBtn">📜 Логи</button></li>
+        <li><button id="mapBtn">🗺️ Карта GuP</button></li>
+        <li><button id="ratingBtn">📊 Рейтинг</button></li>
+        <li id="adminMenuItem" style="display: none;"><button id="adminBtn">👑 Админ-панель</button></li>
+    </ul>
+</div>
+
+<div class="glow-container" id="glowContainer">
+    <div class="container" id="mainContainer">
+        <h1 class="school-name" id="school-name"></h1>
+        <div class="balance-card">Баланс: <span id="balance"></span></div>
+
+        <h3>Купленные танки</h3>
+        <div class="table-controls">
+            <label>Показывать:
+                <select id="itemsPerPage">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="all">Все</option>
+                </select>
+            </label>
+        </div>
+        <div class="tanks-table-wrapper">
+            <table class="tanks-table" id="tanksTable">
+                <thead>
+                    <tr>
+                        <th data-sort="name">Название <span class="sort-indicator"></span></th>
+                        <th data-sort="br">БР <span class="sort-indicator"></span></th>
+                        <th data-sort="quantity">Количество <span class="sort-indicator"></span></th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div id="pagination" class="pagination"></div>
+
+        <div class="action-buttons">
+            <button id="manufacturer-btn">🏭 Производитель</button>
+            <button id="openTransferBtn" style="display: none;">💸 Перевести деньги</button>
+            <button id="changeBgBtn" style="display: none;">🎨 Сменить фон</button>
+            <button id="uploadBgBtn" style="display: none;">📤 Загрузить свой фон</button>
+        </div>
+    </div>
+</div>
+
+<!-- Модалки -->
+<div id="transferModal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="closeModal">&times;</span>
+        <h3>💸 Перевод денег</h3>
+        <label>Кому:</label>
+        <select id="toSchool"></select>
+        <label>Школа получит:</label>
+        <input type="number" id="receivedAmount" value="0" step="100">
+        <label>Вы заплатите:</label>
+        <input type="number" id="payAmount" value="0" readonly>
+        <button id="transferBtn">Перевести</button>
+    </div>
+</div>
+
+<div id="tankActionModal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="closeTankModal">&times;</span>
+        <h3 id="tankModalTitle">Действие с танком</h3>
+        <div id="tankModalInfo"></div>
+        <div style="display: flex; gap: 16px; margin-top: 20px;">
+            <button id="sellTankBtn" style="background: #c0392b;">Продать (60%)</button>
+            <button id="upgradeTankBtn" style="background: #2c5f2d;">Улучшить</button>
+        </div>
+        <div id="upgradeSelectDiv" style="display: none;">
+            <label>Выберите улучшение:</label>
+            <select id="upgradeTargetSelect"></select>
+            <button id="confirmUpgradeBtn">Подтвердить</button>
+        </div>
+    </div>
+</div>
+
+<div id="bgModal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="closeBgModal">&times;</span>
+        <h3>🎨 Выберите фон профиля</h3>
+        <div id="backgroundsList" class="background-gallery"></div>
+        <button id="resetBgBtn" style="background: #555;">Сбросить фон (по умолчанию)</button>
+    </div>
+</div>
+
+<script>
+const api = window.location.origin;
+const TAX = 0.2;
+const SELL_PERCENT = 0.6;
+
+// ---------- АВТОРИЗАЦИЯ через cookie (без localStorage) ----------
+let currentUser = null;
+let currentUserRoles = [];
+let currentUserIsAdmin = false;
+let hasRight = false;
+let schoolId = null;
+
+async function authFetch(url, options = {}) {
+    const headers = { "Content-Type": "application/json", ...options.headers };
+    return fetch(url, { ...options, headers, credentials: 'include' });
+}
+
+async function updateAuthUI() {
+    const userNameSpan = document.getElementById("userNameDisplay");
+    const loginBtn = document.getElementById("loginBtn");
+    const registerBtn = document.getElementById("registerBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const adminMenuItem = document.getElementById("adminMenuItem");
+
+    try {
+        const res = await authFetch(`${api}/me`);
+        if (res.ok) {
+            const user = await res.json();
+            currentUser = user;
+            currentUserRoles = user.roles || [];
+            currentUserIsAdmin = user.is_admin || false;
+            userNameSpan.textContent = user.username;
+            userNameSpan.style.display = "inline-block";
+            loginBtn.style.display = "none";
+            registerBtn.style.display = "none";
+            logoutBtn.style.display = "inline-flex";
+            if (adminMenuItem) adminMenuItem.style.display = currentUserIsAdmin ? "block" : "none";
+        } else {
+            currentUser = null;
+            currentUserRoles = [];
+            currentUserIsAdmin = false;
+            userNameSpan.style.display = "none";
+            loginBtn.style.display = "inline-flex";
+            registerBtn.style.display = "inline-flex";
+            logoutBtn.style.display = "none";
+            if (adminMenuItem) adminMenuItem.style.display = "none";
+        }
+    } catch (err) {
+        console.error(err);
+        currentUser = null;
+        currentUserRoles = [];
+        currentUserIsAdmin = false;
+        userNameSpan.style.display = "none";
+        loginBtn.style.display = "inline-flex";
+        registerBtn.style.display = "inline-flex";
+        logoutBtn.style.display = "none";
+        if (adminMenuItem) adminMenuItem.style.display = "none";
+    }
+    // Обновляем видимость кнопок управления, если школа уже загружена
+    updateActionButtons();
+}
+
+function updateActionButtons() {
+    const transferBtn = document.getElementById("openTransferBtn");
+    const changeBgBtn = document.getElementById("changeBgBtn");
+    const uploadBgBtn = document.getElementById("uploadBgBtn");
+
+    if (!schoolId) return;
+    const hasRightNow = currentUserIsAdmin || currentUserRoles.some(r => r.school_id === schoolId && (r.role === "commander" || r.role === "deputy"));
+    if (transferBtn) transferBtn.style.display = hasRightNow ? "inline-block" : "none";
+    if (changeBgBtn) changeBgBtn.style.display = hasRightNow ? "inline-block" : "none";
+    if (uploadBgBtn) uploadBgBtn.style.display = hasRightNow ? "inline-block" : "none";
+}
+
+document.getElementById("loginBtn")?.addEventListener("click", () => {
+    window.location.href = "login.html";
+});
+document.getElementById("registerBtn")?.addEventListener("click", () => {
+    window.location.href = "register.html";
+});
+document.getElementById("logoutBtn")?.addEventListener("click", async () => {
+    await authFetch(`${api}/logout`, { method: "POST" });
+    window.location.reload();
+});
+
+// ---------- САЙДБАР ----------
+document.getElementById("openSidebarBtn").onclick = () => {
+    const sideMenu = document.getElementById("sideMenu");
+    sideMenu.style.display = sideMenu.style.display === "block" ? "none" : "block";
+};
+document.getElementById("schoolsBtn").onclick = () => { window.location.href = "index.html"; };
+document.getElementById("matchesBtn").onclick = () => { window.location.href = "matches.html"; };
+document.getElementById("tanksBtn").onclick = () => { window.location.href = "tanks.html"; };
+document.getElementById("wheelBtn").onclick = () => { window.location.href = "wheel.html"; };
+document.getElementById("importBtn").onclick = () => { window.location.href = "import.html"; };
+document.getElementById("logsBtn").onclick = () => { window.location.href = "logs.html"; };
+document.getElementById("adminBtn").onclick = () => { window.location.href = "admin.html"; };
+document.getElementById("mapBtn").onclick = () => {window.location.href = "japan_map.html"; };
+document.getElementById("ratingBtn").onclick = () => {window.location.href = "rating.html"; };
+
+// ---------- ОСНОВНАЯ ЛОГИКА ШКОЛЫ ----------
+const params = new URLSearchParams(window.location.search);
+schoolId = parseInt(params.get("id"));
+
+let schools = [];
+let tanksData = [];
+let sortedTanks = [];
+let currentPage = 1;
+let itemsPerPage = 5;
+let currentSort = { field: "br", order: "asc" };
+let currentTankForAction = null;
+
+function formatNumber(num) {
+    if (num === undefined || num === null) return '0';
+    const number = typeof num === 'number' ? num : parseFloat(num);
+    if (isNaN(number)) return '0';
+    return number.toLocaleString('ru-RU');
+}
+
+function sortTanks(tanks, field, order) {
+    return [...tanks].sort((a, b) => {
+        let valA, valB;
+        switch (field) {
+            case "name": valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); break;
+            case "br": valA = a.br; valB = b.br; break;
+            case "quantity": valA = a.quantity; valB = b.quantity; break;
+            default: return 0;
+        }
+        if (valA < valB) return order === "asc" ? -1 : 1;
+        if (valA > valB) return order === "asc" ? 1 : -1;
+        return 0;
+    });
+}
+function updateSortIndicators() {
+    document.querySelectorAll("#tanksTable th[data-sort]").forEach(th => {
+        const field = th.getAttribute("data-sort");
+        const indicator = th.querySelector(".sort-indicator");
+        if (field === currentSort.field) indicator.textContent = currentSort.order === "asc" ? "▲" : "▼";
+        else indicator.textContent = "";
+    });
+}
+function renderTanksTable() {
+    const tbody = document.querySelector("#tanksTable tbody");
+    tbody.innerHTML = "";
+    let displayTanks = [...sortedTanks];
+    if (itemsPerPage !== "all") {
+        const start = (currentPage - 1) * itemsPerPage;
+        displayTanks = displayTanks.slice(start, start + itemsPerPage);
+    }
+    displayTanks.forEach(tank => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${tank.name}</td><td>${tank.br}</td><td>${formatNumber(tank.quantity)}</td>`;
+        tr.dataset.tankId = tank.id;
+        tr.onclick = (e) => { e.stopPropagation(); openTankActionModal(tank); };
+        tbody.appendChild(tr);
+    });
+    renderPagination();
+}
+function renderPagination() {
+    const div = document.getElementById("pagination");
+    div.innerHTML = "";
+    if (itemsPerPage === "all") return;
+    const totalPages = Math.ceil(sortedTanks.length / itemsPerPage);
+    if (totalPages <= 1) return;
+    const start = (currentPage - 1) * itemsPerPage + 1;
+    const end = Math.min(start + itemsPerPage - 1, sortedTanks.length);
+    div.innerHTML = `<span>${start}-${end} из ${sortedTanks.length}</span>`;
+    if (currentPage > 1) {
+        const prev = document.createElement("button");
+        prev.textContent = "← Назад";
+        prev.onclick = () => { currentPage--; renderTanksTable(); };
+        div.appendChild(prev);
+    }
+    if (currentPage < totalPages) {
+        const next = document.createElement("button");
+        next.textContent = "Вперед →";
+        next.onclick = () => { currentPage++; renderTanksTable(); };
+        div.appendChild(next);
+    }
+}
+function applySortAndRender() {
+    sortedTanks = sortTanks(tanksData, currentSort.field, currentSort.order);
+    currentPage = 1;
+    renderTanksTable();
+    updateSortIndicators();
+}
+
+// Установка фона
+function setBackgroundFromUrl(url) {
+    const bgDiv = document.getElementById("bgImage");
+    bgDiv.innerHTML = '';
+    bgDiv.style.backgroundImage = '';
+    if (!url) return;
+    const isVideo = url.match(/\.(mp4|webm|mov)$/i);
+    if (isVideo) {
+        const video = document.createElement('video');
+        video.src = url;
+        video.autoplay = true;
+        video.muted = true;
+        video.loop = true;
+        video.playsInline = true;
+        video.style.width = '100%';
+        video.style.height = '100%';
+        video.style.objectFit = 'cover';
+        bgDiv.appendChild(video);
+        video.play().catch(e => console.log('Автовоспроизведение заблокировано:', e));
+    } else {
+        bgDiv.style.backgroundImage = `url(${url})`;
+        bgDiv.style.backgroundSize = 'cover';
+        bgDiv.style.backgroundPosition = 'center';
+    }
+}
+
+// Функция для назначения анимированной обводки
+function setGlowBorder(schoolName) {
+    const wrapper = document.getElementById('glowContainer');
+    wrapper.classList.remove(
+        'glow-gradient', 'glow-pravda', 'glow-ooarai', 'glow-kuromorimine',
+        'glow-saunders', 'glow-stgloriana', 'glow-anzio', 'glow-bcfreedom',
+        'glow-chihatan', 'glow-bellwall', 'glow-jatkosota', 'glow-viggen',
+        'glow-yogurt', 'glow-allstars'
+    );
+    switch (schoolName) {
+        case 'Pravda': wrapper.classList.add('glow-pravda'); break;
+        case 'Ooarai': wrapper.classList.add('glow-ooarai'); break;
+        case 'Kuromorimine': wrapper.classList.add('glow-kuromorimine'); break;
+        case 'Saunders': wrapper.classList.add('glow-saunders'); break;
+        case 'St.Gloriana': wrapper.classList.add('glow-stgloriana'); break;
+        case 'Anzio': wrapper.classList.add('glow-anzio'); break;
+        case 'BC Freedom': wrapper.classList.add('glow-bcfreedom'); break;
+        case 'Chi-Ha-Tan': wrapper.classList.add('glow-chihatan'); break;
+        case 'BellWall': wrapper.classList.add('glow-bellwall'); break;
+        case 'Jatkosota': wrapper.classList.add('glow-jatkosota'); break;
+        case 'Viggen': wrapper.classList.add('glow-viggen'); break;
+        case 'Yogurt': wrapper.classList.add('glow-yogurt'); break;
+        case 'All-Stars': wrapper.classList.add('glow-allstars'); break;
+        default: wrapper.classList.add('glow-gradient'); break;
+    }
+}
+
+async function loadSchool() {
+    const res = await fetch(`${api}/schools/${schoolId}`);
+    const data = await res.json();
+    document.getElementById("school-name").textContent = data.name;
+    document.getElementById("balance").textContent = formatNumber(data.balance);
+    tanksData = data.tanks;
+    currentSort = { field: "br", order: "asc" };
+    sortedTanks = sortTanks(tanksData, "br", "asc");
+    renderTanksTable();
+    updateSortIndicators();
+    setBackgroundFromUrl(data.background_path);
+    setGlowBorder(data.name);
+    // Обновляем кнопки после загрузки школы (чтобы знать schoolId)
+    updateActionButtons();
+}
+
+document.getElementById("itemsPerPage").addEventListener("change", e => {
+    itemsPerPage = e.target.value === "all" ? "all" : parseInt(e.target.value);
+    currentPage = 1;
+    renderTanksTable();
+});
+document.querySelectorAll("#tanksTable th[data-sort]").forEach(th => {
+    th.addEventListener("click", () => {
+        const field = th.getAttribute("data-sort");
+        if (currentSort.field === field) currentSort.order = currentSort.order === "asc" ? "desc" : "asc";
+        else { currentSort.field = field; currentSort.order = "asc"; }
+        applySortAndRender();
+    });
+});
+
+// ---------- ФОНЫ ----------
+async function loadBackgrounds() {
+    const res = await fetch(`${api}/schools/backgrounds/list`);
+    return res.json();
+}
+async function setSchoolBackground(bgPath) {
+    if (!currentUser) {
+        alert("Войдите, чтобы изменить фон");
+        return false;
+    }
+    const res = await authFetch(`${api}/schools/${schoolId}/set_background`, {
+        method: "POST",
+        body: JSON.stringify({ background_path: bgPath })
+    });
+    return res.ok;
+}
+async function openBgSelector() {
+    if (!currentUser) {
+        alert("Войдите, чтобы выбрать фон");
+        return;
+    }
+    const backgrounds = await loadBackgrounds();
+    const gallery = document.getElementById("backgroundsList");
+    gallery.innerHTML = "";
+    if (backgrounds.length === 0) {
+        gallery.innerHTML = "<p>Нет доступных фонов. Добавьте изображения в папку frontend/images/backgrounds/</p>";
+    } else {
+        backgrounds.forEach(bg => {
+            const div = document.createElement("div");
+            div.className = "background-option";
+            div.innerHTML = `<img src="${bg}" alt="фон"><span>${bg.split('/').pop()}</span>`;
+            div.onclick = async () => {
+                if (await setSchoolBackground(bg)) {
+                    setBackgroundFromUrl(bg);
+                    document.getElementById("bgModal").style.display = "none";
+                    alert("Фон изменён!");
+                } else {
+                    alert("Ошибка при установке фона");
+                }
+            };
+            gallery.appendChild(div);
+        });
+    }
+    document.getElementById("bgModal").style.display = "block";
+}
+async function resetBackground() {
+    if (!currentUser) {
+        alert("Войдите, чтобы сбросить фон");
+        return;
+    }
+    if (await setSchoolBackground(null)) {
+        setBackgroundFromUrl(null);
+        document.getElementById("bgModal").style.display = "none";
+        alert("Фон сброшен на стандартный");
+    } else {
+        alert("Ошибка сброса фона");
+    }
+}
+document.getElementById("changeBgBtn").onclick = openBgSelector;
+document.getElementById("resetBgBtn").onclick = resetBackground;
+document.getElementById("closeBgModal").onclick = () => {
+    document.getElementById("bgModal").style.display = "none";
+};
+
+// Загрузка своего фона
+document.getElementById("uploadBgBtn").onclick = () => {
+    if (!currentUser) {
+        alert("Войдите, чтобы загрузить свой фон");
+        return;
+    }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*,video/mp4,video/webm';
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+            const res = await fetch(`${api}/schools/${schoolId}/upload_background`, {
+                method: 'POST',
+                credentials: 'include',
+                body: formData
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setBackgroundFromUrl(data.path);
+                alert('Фон успешно загружен!');
+            } else {
+                const err = await res.json();
+                alert('Ошибка: ' + (err.detail || 'Не удалось загрузить фон'));
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Ошибка соединения с сервером');
+        }
+    };
+    input.click();
+};
+
+// ---------- МОДАЛКА ПРОДАЖИ/УЛУЧШЕНИЯ ----------
+const tankModal = document.getElementById("tankActionModal");
+const closeTankModal = document.getElementById("closeTankModal");
+closeTankModal.onclick = () => tankModal.style.display = "none";
+window.onclick = (e) => {
+    if (e.target === tankModal) tankModal.style.display = "none";
+    if (e.target === document.getElementById("bgModal")) document.getElementById("bgModal").style.display = "none";
+    if (e.target === transferModal) transferModal.style.display = "none";
+};
+
+function openTankActionModal(tank) {
+    if (!currentUser) {
+        alert("Войдите, чтобы управлять танками");
+        return;
+    }
+    currentTankForAction = tank;
+    document.getElementById("tankModalTitle").innerHTML = `Действие: ${tank.name}`;
+    const sellPrice = Math.floor(tank.price * SELL_PERCENT);
+    document.getElementById("tankModalInfo").innerHTML = `
+        <p>Цена покупки: ${formatNumber(tank.price)}</p>
+        <p>Количество: ${formatNumber(tank.quantity)}</p>
+        <p>Продажа: +${formatNumber(sellPrice)}</p>
+    `;
+    document.getElementById("upgradeSelectDiv").style.display = "none";
+    loadUpgrades(tank.id);
+    tankModal.style.display = "block";
+}
+async function loadUpgrades(tankId) {
+    try {
+        const response = await fetch(`${api}/tanks/${tankId}/upgrades`);
+        const upgrades = await response.json();
+        const select = document.getElementById("upgradeTargetSelect");
+        select.innerHTML = '<option value="">-- Выберите улучшение --</option>';
+        upgrades.forEach(up => {
+            const opt = document.createElement("option");
+            opt.value = up.to_tank_id;
+            opt.textContent = `${up.to_tank_name} (стоимость: ${formatNumber(up.cost)})`;
+            select.appendChild(opt);
+        });
+        document.getElementById("upgradeSelectDiv").style.display = upgrades.length > 0 ? "block" : "none";
+    } catch (err) { console.error(err); }
+}
+document.getElementById("sellTankBtn").onclick = async () => {
+    if (!currentUser) {
+        alert("Войдите, чтобы продать танк");
+        return;
+    }
+    if (!currentTankForAction) return;
+    const sellPrice = Math.floor(currentTankForAction.price * SELL_PERCENT);
+    if (!confirm(`Продать один ${currentTankForAction.name} за ${formatNumber(sellPrice)}?`)) return;
+    try {
+        const res = await authFetch(`${api}/schools/${schoolId}/sell_tank`, { method: "POST", body: JSON.stringify({ tank_id: currentTankForAction.id }) });
+        if (res.ok) {
+            alert(`Танк продан! +${formatNumber(sellPrice)} к балансу.`);
+            tankModal.style.display = "none";
+            await loadSchool();
+            await loadSchoolsForTransfer();
+        } else alert("Ошибка: " + ((await res.json()).detail || "Неизвестная ошибка"));
+    } catch (err) { console.error(err); alert("Ошибка соединения"); }
+};
+let selectedUpgradeId = null;
+document.getElementById("upgradeTargetSelect").onchange = e => { selectedUpgradeId = e.target.value ? parseInt(e.target.value) : null; };
+document.getElementById("confirmUpgradeBtn").onclick = async () => {
+    if (!currentUser) {
+        alert("Войдите, чтобы улучшить танк");
+        return;
+    }
+    if (!selectedUpgradeId) { alert("Выберите улучшение!"); return; }
+    if (!currentTankForAction) return;
+    const upgradeSelect = document.getElementById("upgradeTargetSelect");
+    const selectedOption = upgradeSelect.options[upgradeSelect.selectedIndex];
+    const costText = selectedOption.textContent.match(/стоимость: (\d+)/);
+    const cost = costText ? parseInt(costText[1]) : 0;
+    if (!confirm(`Улучшить ${currentTankForAction.name} за ${formatNumber(cost)}?`)) return;
+    try {
+        const res = await authFetch(`${api}/schools/${schoolId}/upgrade_tank`, { method: "POST", body: JSON.stringify({ from_tank_id: currentTankForAction.id, to_tank_id: selectedUpgradeId }) });
+        if (res.ok) {
+            alert(`Улучшение выполнено! Стоимость: ${formatNumber((await res.json()).cost)}.`);
+            tankModal.style.display = "none";
+            await loadSchool();
+            await loadSchoolsForTransfer();
+        } else alert("Ошибка: " + ((await res.json()).detail || "Неизвестная ошибка"));
+    } catch (err) { console.error(err); alert("Ошибка соединения"); }
+};
+
+// ---------- ПЕРЕВОД ДЕНЕГ ----------
+async function loadSchoolsForTransfer() {
+    const res = await fetch(`${api}/schools/`);
+    schools = await res.json();
+    const toSelect = document.getElementById("toSchool");
+    toSelect.innerHTML = "";
+    schools.forEach(s => { if (s.id !== schoolId) toSelect.appendChild(new Option(`${s.name} (баланс: ${formatNumber(s.balance)})`, s.id)); });
+}
+const transferModal = document.getElementById("transferModal");
+document.getElementById("openTransferBtn").onclick = () => {
+    if (!currentUser) {
+        alert("Войдите, чтобы переводить деньги");
+        return;
+    }
+    transferModal.style.display = "block";
+};
+document.getElementById("closeModal").onclick = () => transferModal.style.display = "none";
+document.getElementById("receivedAmount").addEventListener("input", () => {
+    const received = parseInt(document.getElementById("receivedAmount").value) || 0;
+    const pay = Math.ceil(received / (1 - TAX));
+    document.getElementById("payAmount").value = pay;
+});
+document.getElementById("transferBtn").addEventListener("click", async () => {
+    if (!currentUser) {
+        alert("Войдите, чтобы перевести деньги");
+        return;
+    }
+    const toId = parseInt(document.getElementById("toSchool").value);
+    const received = parseInt(document.getElementById("receivedAmount").value) || 0;
+    const amount = parseInt(document.getElementById("payAmount").value) || 0;
+    if (received <= 0) {
+        alert("Введите сумму, которую должна получить школа");
+        return;
+    }
+    const fromSchool = schools.find(s => s.id === schoolId);
+    if (amount > fromSchool.balance) {
+        alert(`Недостаточно средств. Нужно ${formatNumber(amount)}, доступно ${formatNumber(fromSchool.balance)}`);
+        return;
+    }
+    try {
+        const res = await authFetch(`${api}/transfer/`, {
+            method: "POST",
+            body: JSON.stringify({ from_school_id: schoolId, to_school_id: toId, amount })
+        });
+        if (!res.ok) {
+            const err = await res.json();
+            alert(err.detail || "Ошибка перевода");
+            return;
+        }
+        const data = await res.json();
+        alert(`Перевод выполнен!\nОтправлено: ${formatNumber(data.sent)}\nПолучено: ${formatNumber(data.received)}`);
+        transferModal.style.display = "none";
+        document.getElementById("receivedAmount").value = 0;
+        document.getElementById("payAmount").value = 0;
+        await loadSchool();
+        await loadSchoolsForTransfer();
+    } catch (err) {
+        console.error(err);
+        alert("Ошибка сервера");
+    }
+});
+document.getElementById("manufacturer-btn").onclick = () => window.location.href = `shop.html?school_id=${schoolId}`;
+
+// ИНИЦИАЛИЗАЦИЯ
+updateAuthUI().then(() => {
+    loadSchool();
+    loadSchoolsForTransfer();
+});
+</script>
+</body>
+</html>

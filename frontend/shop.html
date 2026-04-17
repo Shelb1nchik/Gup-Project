@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Производитель | Girls und Panzer</title>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    background: linear-gradient(135deg, #0a0f1e 0%, #0c1222 100%);
+    color: #eef4ff;
+    font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    padding: 24px;
+}
+#openSidebarBtn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1100;
+    font-size: 26px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 40px;
+    transition: all 0.2s ease;
+}
+#openSidebarBtn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.02);
+}
+#sideMenu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    height: 100%;
+    background: rgba(20, 25, 40, 0.95);
+    backdrop-filter: blur(12px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 28px 16px;
+    display: none;
+    z-index: 1050;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+}
+#sideMenu ul {
+    list-style: none;
+    margin-top: 40px;
+}
+#sideMenu li {
+    margin: 24px 0;
+}
+#sideMenu button {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 12px;
+    border-radius: 32px;
+    color: white;
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.2s;
+    text-align: left;
+    padding-left: 20px;
+}
+#sideMenu button:hover {
+    background: rgba(231, 76, 60, 0.7);
+    border-color: #e74c3c;
+    transform: translateX(6px);
+}
+.tank-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    background: #1e2438;
+    border: 2px solid #2a3348;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    transition: 0.2s;
+    vertical-align: middle;
+}
+.tank-checkbox:checked {
+    background: #e74c3c;
+    border-color: #e74c3c;
+}
+.tank-checkbox:checked::after {
+    content: '✓';
+    position: absolute;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+.tank-checkbox:hover {
+    border-color: #e74c3c;
+}
+.container {
+    max-width: 1100px;
+    margin: 40px auto 0;
+    background: rgba(25, 30, 45, 0.5);
+    backdrop-filter: blur(4px);
+    border-radius: 36px;
+    padding: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    position: relative;
+    z-index: 1;
+}
+h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #fff, #e74c3c);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-align: center;
+    margin-bottom: 16px;
+}
+.balance-card {
+    background: rgba(0,0,0,0.3);
+    border-radius: 60px;
+    padding: 10px 20px;
+    text-align: center;
+    width: fit-content;
+    margin: 0 auto 24px auto;
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+.balance-card span {
+    color: #f1c40f;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+.table-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+.items-per-page {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+#itemsPerPage {
+    background: #1e2438;
+    border: 1px solid #2a3348;
+    border-radius: 40px;
+    padding: 6px 12px;
+    color: white;
+    cursor: pointer;
+}
+.shop-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(0,0,0,0.3);
+    border-radius: 20px;
+    overflow: hidden;
+}
+.shop-table th, .shop-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.shop-table th {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+}
+.shop-table th:hover {
+    background: rgba(231, 76, 60, 0.4);
+}
+.shop-table tr:hover {
+    background: rgba(231, 76, 60, 0.1);
+}
+.sort-indicator {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 0.7rem;
+}
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 24px;
+}
+.pagination button {
+    background: #2c5f2d;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 40px;
+    cursor: pointer;
+    transition: 0.2s;
+    font-weight: 500;
+}
+.pagination button:hover {
+    background: #1e3a1e;
+    transform: scale(1.02);
+}
+.buy-button {
+    text-align: center;
+    margin-top: 28px;
+}
+#buyBtn {
+    background: linear-gradient(95deg, #e74c3c, #c0392b);
+    border: none;
+    padding: 12px 32px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-radius: 60px;
+    cursor: pointer;
+    transition: 0.2s;
+    box-shadow: 0 4px 15px rgba(231,76,60,0.4);
+}
+#buyBtn:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px rgba(231,76,60,0.6);
+}
+.user-info {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(10, 15, 30, 0.65);
+    backdrop-filter: blur(12px);
+    padding: 6px 18px;
+    border-radius: 60px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+.user-info:hover {
+    border-color: rgba(231, 76, 60, 0.5);
+    background: rgba(10, 15, 30, 0.8);
+}
+#userNameDisplay {
+    background: rgba(0, 0, 0, 0.45);
+    padding: 6px 14px;
+    border-radius: 40px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #fff;
+    letter-spacing: 0.3px;
+    backdrop-filter: blur(4px);
+    white-space: nowrap;
+}
+.auth-buttons {
+    display: flex;
+    gap: 10px;
+}
+.auth-buttons button {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 7px 18px;
+    border-radius: 40px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: inherit;
+    color: #f0f0f0;
+    transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.auth-buttons button:hover {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    border-color: rgba(255, 255, 255, 0.7);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 18px rgba(231, 76, 60, 0.4);
+    color: white;
+}
+#logoutBtn {
+    background: rgba(192, 57, 43, 0.7);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+#logoutBtn:hover {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    transform: translateY(-2px);
+}
+.bg-image {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.bg-image video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #1a1f2e;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+    background: #e74c3c;
+    border-radius: 10px;
+}
+@media (max-width: 700px) {
+    .container {
+        padding: 16px;
+    }
+    .shop-table th, .shop-table td {
+        padding: 8px 10px;
+        font-size: 0.75rem;
+    }
+    .table-controls {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .user-info {
+        top: 12px;
+        right: 12px;
+        padding: 4px 12px;
+        gap: 8px;
+    }
+    .auth-buttons {
+        gap: 6px;
+    }
+    .auth-buttons button {
+        padding: 5px 12px;
+        font-size: 0.75rem;
+        gap: 4px;
+    }
+    #userNameDisplay {
+        padding: 4px 10px;
+        font-size: 0.75rem;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-image" id="bgImage"></div>
+
+<div class="user-info">
+    <span id="userNameDisplay" style="display: none;"></span>
+    <div class="auth-buttons">
+        <button id="loginBtn" style="display: none;">Войти</button>
+        <button id="registerBtn" style="display: none;">Регистрация</button>
+        <button id="logoutBtn" style="display: none;">Выйти</button>
+    </div>
+</div>
+
+<button id="openSidebarBtn">☰</button>
+<div id="sideMenu">
+    <ul>
+        <li><button id="schoolsBtn">🏫 Школы</button></li>
+        <li><button id="matchesBtn">📅 Матчи</button></li>
+        <li><button id="tanksBtn">🛸 Танки</button></li>
+        <li><button id="wheelBtn">🎡 Колесо</button></li>
+        <li><button id="importBtn">📦 Импорт</button></li>
+        <li><button id="logsBtn">📜 Логи</button></li>
+        <li><button id="mapBtn">🗺️ Карта GuP</button></li>
+        <li><button id="ratingBtn">📊 Рейтинг</button></li>
+        <li id="adminMenuItem" style="display: none;"><button id="adminBtn">👑 Админ-панель</button></li>
+    </ul>
+</div>
+
+<div class="container">
+    <h1 id="school-name">Производитель</h1>
+    <div class="balance-card">Баланс: <span id="balance">—</span></div>
+
+    <div class="table-controls">
+        <div class="items-per-page">
+            <label>Показывать:</label>
+            <select id="itemsPerPage">
+                <option value="10" selected>10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="all">Все</option>
+            </select>
+        </div>
+    </div>
+
+    <table class="shop-table" id="manufacturerTable">
+        <thead>
+            <tr>
+                <th data-sort="checkbox"></th>
+                <th data-sort="name">Название <span class="sort-indicator"></span></th>
+                <th data-sort="price">Цена <span class="sort-indicator"></span></th>
+                <th data-sort="br">БР <span class="sort-indicator"></span></th>
+                <th data-sort="type">Тип <span class="sort-indicator"></span></th>
+                <th data-sort="rank">Ранг <span class="sort-indicator"></span></th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <tr><td colspan="6">Загрузка...<\/td><\/tr>
+        </tbody>
+    </table>
+
+    <div id="pagination" class="pagination"></div>
+
+    <div class="buy-button">
+        <button id="buyBtn" style="display: none;">Купить выбранные танки</button>
+    </div>
+</div>
+
+<script>
+const api = window.location.origin;
+const params = new URLSearchParams(window.location.search);
+const schoolId = parseInt(params.get("school_id"));
+
+function formatNumber(num) {
+    if (num === undefined || num === null) return '0';
+    const number = typeof num === 'number' ? num : parseFloat(num);
+    if (isNaN(number)) return '0';
+    return number.toLocaleString('ru-RU');
+}
+
+// ---------- АВТОРИЗАЦИЯ через cookie (без localStorage) ----------
+let currentUser = null;
+let currentUserRoles = [];
+let currentUserIsAdmin = false;
+let hasRight = false;
+
+async function authFetch(url, options = {}) {
+    const headers = { "Content-Type": "application/json", ...options.headers };
+    return fetch(url, { ...options, headers, credentials: 'include' });
+}
+
+async function updateAuthUI() {
+    const userNameSpan = document.getElementById("userNameDisplay");
+    const loginBtn = document.getElementById("loginBtn");
+    const registerBtn = document.getElementById("registerBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const adminMenuItem = document.getElementById("adminMenuItem");
+    const buyBtn = document.getElementById("buyBtn");
+
+    try {
+        const res = await authFetch(`${api}/me`);
+        if (res.ok) {
+            const user = await res.json();
+            currentUser = user;
+            currentUserRoles = user.roles || [];
+            currentUserIsAdmin = user.is_admin || false;
+            userNameSpan.textContent = user.username;
+            userNameSpan.style.display = "inline-block";
+            loginBtn.style.display = "none";
+            registerBtn.style.display = "none";
+            logoutBtn.style.display = "inline-flex";
+            if (adminMenuItem) adminMenuItem.style.display = currentUserIsAdmin ? "block" : "none";
+
+            hasRight = currentUserIsAdmin || currentUserRoles.some(r => r.school_id === schoolId && (r.role === "commander" || r.role === "deputy"));
+            if (buyBtn) buyBtn.style.display = hasRight ? "inline-block" : "none";
+            document.querySelectorAll(".tank-checkbox").forEach(cb => {
+                cb.style.display = hasRight ? "inline-block" : "none";
+            });
+        } else {
+            currentUser = null;
+            currentUserRoles = [];
+            currentUserIsAdmin = false;
+            hasRight = false;
+            userNameSpan.style.display = "none";
+            loginBtn.style.display = "inline-flex";
+            registerBtn.style.display = "inline-flex";
+            logoutBtn.style.display = "none";
+            if (adminMenuItem) adminMenuItem.style.display = "none";
+            if (buyBtn) buyBtn.style.display = "none";
+            document.querySelectorAll(".tank-checkbox").forEach(cb => {
+                cb.style.display = "none";
+            });
+        }
+    } catch (err) {
+        console.error(err);
+        currentUser = null;
+        currentUserRoles = [];
+        currentUserIsAdmin = false;
+        hasRight = false;
+        userNameSpan.style.display = "none";
+        loginBtn.style.display = "inline-flex";
+        registerBtn.style.display = "inline-flex";
+        logoutBtn.style.display = "none";
+        if (adminMenuItem) adminMenuItem.style.display = "none";
+        if (buyBtn) buyBtn.style.display = "none";
+        document.querySelectorAll(".tank-checkbox").forEach(cb => {
+            cb.style.display = "none";
+        });
+    }
+}
+
+document.getElementById("loginBtn")?.addEventListener("click", () => {
+    window.location.href = "login.html";
+});
+document.getElementById("registerBtn")?.addEventListener("click", () => {
+    window.location.href = "register.html";
+});
+document.getElementById("logoutBtn")?.addEventListener("click", async () => {
+    await authFetch(`${api}/logout`, { method: "POST" });
+    window.location.reload();
+});
+
+// ---------- САЙДБАР ----------
+const sideMenu = document.getElementById("sideMenu");
+const openSidebarBtn = document.getElementById("openSidebarBtn");
+openSidebarBtn.onclick = () => {
+    sideMenu.style.display = sideMenu.style.display === "block" ? "none" : "block";
+};
+document.getElementById("schoolsBtn").onclick = () => { window.location.href = "index.html"; };
+document.getElementById("matchesBtn").onclick = () => { window.location.href = "matches.html"; };
+document.getElementById("tanksBtn").onclick = () => { window.location.href = "tanks.html"; };
+document.getElementById("wheelBtn").onclick = () => { window.location.href = "wheel.html"; };
+document.getElementById("importBtn").onclick = () => { window.location.href = "import.html"; };
+document.getElementById("adminBtn").onclick = () => { window.location.href = "admin.html"; };
+document.getElementById("logsBtn").onclick = () => { window.location.href = "logs.html"; };
+document.getElementById("ratingBtn").onclick = () => { window.location.href = "rating.html"; };
+document.getElementById("mapBtn").onclick = () => { window.location.href = "japan_map.html"; };
+
+// ---------- ФУНКЦИЯ УСТАНОВКИ ФОНА ----------
+function setBackgroundFromUrl(url) {
+    const bgDiv = document.getElementById("bgImage");
+    bgDiv.innerHTML = '';
+    bgDiv.style.backgroundImage = '';
+    if (!url) return;
+    const isVideo = url.match(/\.(mp4|webm|mov)$/i);
+    if (isVideo) {
+        const video = document.createElement('video');
+        video.src = url;
+        video.autoplay = true;
+        video.muted = true;
+        video.loop = true;
+        video.playsInline = true;
+        video.style.width = '100%';
+        video.style.height = '100%';
+        video.style.objectFit = 'cover';
+        bgDiv.appendChild(video);
+        video.play().catch(e => console.log('Автовоспроизведение заблокировано:', e));
+    } else {
+        bgDiv.style.backgroundImage = `url(${url})`;
+        bgDiv.style.backgroundSize = 'cover';
+        bgDiv.style.backgroundPosition = 'center';
+    }
+}
+
+// ---------- ОСНОВНАЯ ЛОГИКА МАГАЗИНА ----------
+let allTanks = [];
+let sortedTanks = [];
+let currentDisplayLimit = 10;
+let currentPage = 1;
+let currentSort = { field: "br", order: "asc" };
+
+const itemsPerPageSelect = document.getElementById("itemsPerPage");
+const tableBody = document.getElementById("tableBody");
+const paginationDiv = document.getElementById("pagination");
+const schoolNameEl = document.getElementById("school-name");
+const balanceEl = document.getElementById("balance");
+
+function sortTanks(tanks, field, order) {
+    const sorted = [...tanks];
+    sorted.sort((a, b) => {
+        let valA, valB;
+        switch (field) {
+            case "name":
+                valA = a.name.toLowerCase();
+                valB = b.name.toLowerCase();
+                break;
+            case "price":
+                valA = a.price;
+                valB = b.price;
+                break;
+            case "br":
+                valA = a.br;
+                valB = b.br;
+                break;
+            case "type":
+                valA = a.type || "";
+                valB = b.type || "";
+                break;
+            case "rank":
+                valA = a.rank;
+                valB = b.rank;
+                break;
+            default:
+                return 0;
+        }
+        if (valA < valB) return order === "asc" ? -1 : 1;
+        if (valA > valB) return order === "asc" ? 1 : -1;
+        return 0;
+    });
+    return sorted;
+}
+
+function updateSortIndicators() {
+    const headers = document.querySelectorAll("#manufacturerTable th[data-sort]");
+    headers.forEach(th => {
+        const field = th.getAttribute("data-sort");
+        const indicatorSpan = th.querySelector(".sort-indicator");
+        if (!indicatorSpan) return;
+        if (field === currentSort.field) {
+            indicatorSpan.textContent = currentSort.order === "asc" ? "▲" : "▼";
+        } else {
+            indicatorSpan.textContent = "";
+        }
+    });
+}
+
+function renderTable() {
+    let displayTanks = [...sortedTanks];
+    if (currentDisplayLimit !== "all" && currentDisplayLimit !== Infinity) {
+        const start = (currentPage - 1) * currentDisplayLimit;
+        const end = start + currentDisplayLimit;
+        displayTanks = displayTanks.slice(start, end);
+    }
+    tableBody.innerHTML = "";
+    if (!displayTanks.length) {
+        tableBody.innerHTML = '<tr><td colspan="6">Нет доступных танков<\/td><\/tr>';
+        renderPagination();
+        return;
+    }
+    displayTanks.forEach(tank => {
+        const row = document.createElement("tr");
+        const chkTd = document.createElement("td");
+        const chk = document.createElement("input");
+        chk.type = "checkbox";
+        chk.className = "tank-checkbox";
+        chk.dataset.id = tank.id;
+        chk.dataset.price = tank.price;
+        chk.style.display = hasRight ? "inline-block" : "none";
+        chkTd.appendChild(chk);
+        row.appendChild(chkTd);
+
+        const nameTd = document.createElement("td");
+        nameTd.textContent = tank.name;
+        row.appendChild(nameTd);
+
+        const priceTd = document.createElement("td");
+        priceTd.textContent = formatNumber(tank.price);
+        row.appendChild(priceTd);
+
+        const brTd = document.createElement("td");
+        brTd.textContent = tank.br;
+        row.appendChild(brTd);
+
+        const typeTd = document.createElement("td");
+        typeTd.textContent = tank.type || "—";
+        row.appendChild(typeTd);
+
+        const rankTd = document.createElement("td");
+        rankTd.textContent = tank.rank;
+        row.appendChild(rankTd);
+
+        tableBody.appendChild(row);
+    });
+    renderPagination();
+}
+
+function renderPagination() {
+    paginationDiv.innerHTML = "";
+    if (currentDisplayLimit === "all" || currentDisplayLimit === Infinity) return;
+    const totalItems = sortedTanks.length;
+    const totalPages = Math.ceil(totalItems / currentDisplayLimit);
+    if (totalPages <= 1) return;
+    const startIndex = (currentPage - 1) * currentDisplayLimit + 1;
+    const endIndex = Math.min(startIndex + currentDisplayLimit - 1, totalItems);
+    const infoSpan = document.createElement("span");
+    infoSpan.textContent = `${startIndex}-${endIndex} из ${totalItems}`;
+    paginationDiv.appendChild(infoSpan);
+    if (currentPage > 1) {
+        const prevBtn = document.createElement("button");
+        prevBtn.textContent = "← Назад";
+        prevBtn.onclick = () => { currentPage--; renderTable(); };
+        paginationDiv.appendChild(prevBtn);
+    }
+    if (currentPage < totalPages) {
+        const nextBtn = document.createElement("button");
+        nextBtn.textContent = "Вперед →";
+        nextBtn.onclick = () => { currentPage++; renderTable(); };
+        paginationDiv.appendChild(nextBtn);
+    }
+}
+
+function applySortAndRender() {
+    sortedTanks = sortTanks(allTanks, currentSort.field, currentSort.order);
+    currentPage = 1;
+    renderTable();
+    updateSortIndicators();
+}
+
+async function loadShopData() {
+    try {
+        tableBody.innerHTML = '<tr><td colspan="6">Загрузка...<\/td><\/tr>';
+        const schoolRes = await fetch(`${api}/schools/${schoolId}`);
+        if (!schoolRes.ok) throw new Error(`HTTP ${schoolRes.status}`);
+        const schoolData = await schoolRes.json();
+        schoolNameEl.textContent = `${schoolData.name} — Производитель`;
+        balanceEl.textContent = formatNumber(schoolData.balance);
+        setBackgroundFromUrl(schoolData.background_path);
+
+        const tanksRes = await fetch(`${api}/tanks/manufacturer/${schoolId}`);
+        if (!tanksRes.ok) throw new Error(`HTTP ${tanksRes.status}`);
+        allTanks = await tanksRes.json();
+
+        currentSort = { field: "br", order: "asc" };
+        sortedTanks = sortTanks(allTanks, "br", "asc");
+        renderTable();
+        updateSortIndicators();
+    } catch (err) {
+        console.error(err);
+        tableBody.innerHTML = '<tr><td colspan="6">❌ Ошибка загрузки данных. Проверьте сервер.<\/td><\/tr>';
+    }
+}
+
+async function buySelected() {
+    if (!hasRight) {
+        alert("У вас нет прав для покупки танков для этой школы.");
+        return;
+    }
+    const checkboxes = document.querySelectorAll(".tank-checkbox:checked");
+    if (checkboxes.length === 0) {
+        alert("Выберите хотя бы один танк!");
+        return;
+    }
+    const items = [];
+    let total = 0;
+    checkboxes.forEach(cb => {
+        const tankId = parseInt(cb.dataset.id);
+        const tank = allTanks.find(t => t.id === tankId);
+        if (tank) {
+            items.push({ tank_id: tank.id, quantity: 1 });
+            total += tank.price;
+        }
+    });
+    if (total <= 0) return;
+    if (!confirm(`Купить выбранные танки за ${formatNumber(total)}?`)) return;
+    try {
+        const res = await authFetch(`${api}/buy/`, {
+            method: "POST",
+            body: JSON.stringify({ school_id: schoolId, items })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            alert("✅ Покупка успешно совершена!");
+            await loadShopData();
+            document.querySelectorAll(".tank-checkbox").forEach(cb => cb.checked = false);
+        } else {
+            alert("Ошибка: " + (data.detail || "Неизвестная ошибка"));
+        }
+    } catch (err) {
+        console.error(err);
+        alert("❌ Ошибка соединения с сервером");
+    }
+}
+
+function initEventListeners() {
+    const headers = document.querySelectorAll("#manufacturerTable th[data-sort]");
+    headers.forEach(th => {
+        th.addEventListener("click", () => {
+            const field = th.getAttribute("data-sort");
+            if (field === "checkbox") return;
+            if (currentSort.field === field) {
+                currentSort.order = currentSort.order === "asc" ? "desc" : "asc";
+            } else {
+                currentSort.field = field;
+                currentSort.order = "asc";
+            }
+            applySortAndRender();
+        });
+    });
+
+    itemsPerPageSelect.addEventListener("change", (e) => {
+        const val = e.target.value;
+        if (val === "all") {
+            currentDisplayLimit = Infinity;
+        } else {
+            currentDisplayLimit = parseInt(val, 10);
+        }
+        currentPage = 1;
+        renderTable();
+    });
+
+    document.getElementById("buyBtn").addEventListener("click", buySelected);
+}
+
+async function init() {
+    await updateAuthUI();
+    await loadShopData();
+    initEventListeners();
+}
+
+init();
+</script>
+</body>
+</html>

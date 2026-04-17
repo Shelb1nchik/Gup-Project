@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Рейтинг школ | Girls und Panzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: linear-gradient(135deg, #0a0f1e 0%, #0c1222 100%);
+            color: #eef4ff;
+            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+            min-height: 100vh;
+            padding: 24px;
+        }
+        #openSidebarBtn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1100;
+            font-size: 26px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 40px;
+            transition: all 0.2s ease;
+        }
+        #openSidebarBtn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.02);
+        }
+        #sideMenu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 260px;
+            height: 100%;
+            background: rgba(20, 25, 40, 0.95);
+            backdrop-filter: blur(12px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 38px 16px;
+            display: none;
+            z-index: 1050;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+        }
+        #sideMenu ul {
+            list-style: none;
+            margin-top: 40px;
+        }
+        #sideMenu li {
+            margin: 24px 0;
+        }
+        #sideMenu button {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 12px;
+            border-radius: 32px;
+            color: white;
+            font-weight: 500;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: left;
+            padding-left: 20px;
+        }
+        #sideMenu button:hover {
+            background: rgba(231, 76, 60, 0.7);
+            border-color: #e74c3c;
+            transform: translateX(6px);
+        }
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding-top: 20px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2rem;
+            background: linear-gradient(135deg, #fff, #e74c3c);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 20px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        .controls button {
+            background: #e74c3c;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .controls button:hover {
+            background: #c0392b;
+            transform: scale(1.02);
+        }
+        .rating-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(25, 30, 45, 0.6);
+            backdrop-filter: blur(4px);
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        .rating-table th, .rating-table td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .rating-table th {
+            background: rgba(0, 0, 0, 0.4);
+            font-weight: 600;
+            color: #e74c3c;
+            font-size: 1rem;
+            cursor: pointer;
+            user-select: none;
+            transition: 0.2s;
+        }
+        .rating-table th:hover {
+            background: rgba(231, 76, 60, 0.2);
+        }
+        .rating-table tr:hover {
+            background: rgba(231, 76, 60, 0.1);
+        }
+        .rating-number {
+            font-weight: bold;
+            color: #f1c40f;
+        }
+        .sort-indicator {
+            display: inline-block;
+            margin-left: 6px;
+            font-size: 0.7rem;
+        }
+        .user-info {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1200;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(10, 15, 30, 0.65);
+            backdrop-filter: blur(12px);
+            padding: 6px 18px;
+            border-radius: 60px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        #userNameDisplay {
+            background: rgba(0, 0, 0, 0.45);
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #fff;
+            white-space: nowrap;
+        }
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .auth-buttons button {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 7px 18px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #f0f0f0;
+            transition: all 0.25s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .auth-buttons button:hover {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            transform: translateY(-2px);
+        }
+        #logoutBtn {
+            background: rgba(192, 57, 43, 0.7);
+        }
+        .loader {
+            text-align: center;
+            padding: 40px;
+            color: #aaa;
+        }
+        @media (max-width: 700px) {
+            .rating-table th, .rating-table td { padding: 8px; font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="user-info">
+    <span id="userNameDisplay" style="display: none;"></span>
+    <div class="auth-buttons">
+        <button id="loginBtn" style="display: none;">Войти</button>
+        <button id="registerBtn" style="display: none;">Регистрация</button>
+        <button id="logoutBtn" style="display: none;">Выйти</button>
+    </div>
+</div>
+<button id="openSidebarBtn">☰</button>
+<div id="sideMenu">
+    <ul>
+        <li><button id="schoolsBtn">🏫 Школы</button></li>
+        <li><button id="matchesBtn">📅 Матчи</button></li>
+        <li><button id="tanksBtn">🛸 Танки</button></li>
+        <li><button id="wheelBtn">🎡 Колесо</button></li>
+        <li><button id="importBtn">📦 Импорт</button></li>
+        <li><button id="logsBtn">📜 Логи</button></li>
+        <li><button id="mapBtn">🗺️ Карта GuP</button></li>
+        <li><button id="ratingBtn">📊 Рейтинг</button></li>
+        <li id="adminMenuItem" style="display: none;"><button id="adminBtn">👑 Админ-панель</button></li>
+    </ul>
+</div>
+<div class="container">
+    <h1>🏆 Рейтинг школ (ELO + сила танков в матче)</h1>
+    <div class="controls">
+        <button id="refreshBtn">🔄 Обновить</button>
+    </div>
+    <div id="ratingContainer">
+        <div class="loader">Загрузка...</div>
+    </div>
+</div>
+
+<script>
+const api = window.location.origin;
+
+// ---------- АВТОРИЗАЦИЯ (без localStorage) ----------
+async function authFetch(url, options = {}) {
+    const headers = { "Content-Type": "application/json", ...options.headers };
+    return fetch(url, { ...options, headers, credentials: 'include' });
+}
+
+let currentUserIsAdmin = false;
+
+async function updateAuthUI() {
+    const userNameSpan = document.getElementById("userNameDisplay");
+    const loginBtn = document.getElementById("loginBtn");
+    const registerBtn = document.getElementById("registerBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const adminMenuItem = document.getElementById("adminMenuItem");
+
+    try {
+        const res = await authFetch(`${api}/me`);
+        if (res.ok) {
+            const user = await res.json();
+            if (userNameSpan) {
+                userNameSpan.textContent = user.username;
+                userNameSpan.style.display = "inline-block";
+            }
+            if (loginBtn) loginBtn.style.display = "none";
+            if (registerBtn) registerBtn.style.display = "none";
+            if (logoutBtn) logoutBtn.style.display = "inline-flex";
+            currentUserIsAdmin = user.is_admin || false;
+            if (adminMenuItem) adminMenuItem.style.display = currentUserIsAdmin ? "block" : "none";
+        } else {
+            // Не авторизован
+            if (userNameSpan) userNameSpan.style.display = "none";
+            if (loginBtn) loginBtn.style.display = "inline-flex";
+            if (registerBtn) registerBtn.style.display = "inline-flex";
+            if (logoutBtn) logoutBtn.style.display = "none";
+            if (adminMenuItem) adminMenuItem.style.display = "none";
+            currentUserIsAdmin = false;
+        }
+    } catch (err) {
+        console.error(err);
+        if (userNameSpan) userNameSpan.style.display = "none";
+        if (loginBtn) loginBtn.style.display = "inline-flex";
+        if (registerBtn) registerBtn.style.display = "inline-flex";
+        if (logoutBtn) logoutBtn.style.display = "none";
+        if (adminMenuItem) adminMenuItem.style.display = "none";
+        currentUserIsAdmin = false;
+    }
+}
+
+document.getElementById("loginBtn")?.addEventListener("click", () => { window.location.href = "login.html"; });
+document.getElementById("registerBtn")?.addEventListener("click", () => { window.location.href = "register.html"; });
+document.getElementById("logoutBtn").onclick = async () => {
+    await authFetch(`${api}/logout`, { method: "POST" });
+    updateAuthUI();
+    refreshRating(); // обновляем таблицу (она всё равно публичная, но просто перезагружаем)
+};
+
+// Сайдбар
+document.getElementById("openSidebarBtn").onclick = () => {
+    const menu = document.getElementById("sideMenu");
+    menu.style.display = menu.style.display === "block" ? "none" : "block";
+};
+document.getElementById("schoolsBtn").onclick = () => { window.location.href = "index.html"; };
+document.getElementById("matchesBtn").onclick = () => { window.location.href = "matches.html"; };
+document.getElementById("tanksBtn").onclick = () => { window.location.href = "tanks.html"; };
+document.getElementById("wheelBtn").onclick = () => { window.location.href = "wheel.html"; };
+document.getElementById("importBtn").onclick = () => { window.location.href = "import.html"; };
+document.getElementById("logsBtn").onclick = () => { window.location.href = "logs.html"; };
+document.getElementById("ratingBtn").onclick = () => { window.location.href = "rating.html"; };
+document.getElementById("adminBtn").onclick = () => { window.location.href = "admin.html"; };
+document.getElementById("mapBtn").onclick = () => {window.location.href = "japan_map.html"; };
+
+// ---------- ЗАГРУЗКА РЕЙТИНГА ----------
+let tankPowerCache = {};
+
+async function getSchoolTankPower(schoolId) {
+    if (tankPowerCache[schoolId]) return tankPowerCache[schoolId];
+    try {
+        const res = await fetch(`${api}/schools/${schoolId}`);
+        if (!res.ok) return 0;
+        const data = await res.json();
+        const tanks = data.tanks || [];
+        let totalBr = 0, totalCount = 0;
+        for (const t of tanks) {
+            totalBr += t.br * t.quantity;
+            totalCount += t.quantity;
+        }
+        const avgBr = totalCount === 0 ? 0 : totalBr / totalCount;
+        tankPowerCache[schoolId] = avgBr;
+        return avgBr;
+    } catch (err) {
+        console.error(err);
+        return 0;
+    }
+}
+
+async function loadRatingFromDB() {
+    try {
+        const res = await fetch(`${api}/schools/`);
+        if (!res.ok) throw new Error("Ошибка загрузки школ");
+        const schools = await res.json();
+        for (let i = 0; i < schools.length; i++) {
+            schools[i].avg_br = await getSchoolTankPower(schools[i].id);
+        }
+        return schools;
+    } catch (err) {
+        console.error(err);
+        return [];
+    }
+}
+
+let currentSort = { field: "rating", order: "desc" };
+
+function sortSchools(schools, field, order) {
+    const sorted = [...schools];
+    sorted.sort((a, b) => {
+        let valA, valB;
+        switch (field) {
+            case "name":
+                valA = a.name.toLowerCase();
+                valB = b.name.toLowerCase();
+                break;
+            case "rating":
+                valA = a.rating;
+                valB = b.rating;
+                break;
+            case "avg_br":
+                valA = a.avg_br || 0;
+                valB = b.avg_br || 0;
+                break;
+            case "wins":
+                valA = a.wins || 0;
+                valB = b.wins || 0;
+                break;
+            case "losses":
+                valA = a.losses || 0;
+                valB = b.losses || 0;
+                break;
+            case "winrate":
+                const wrA = (a.wins + a.losses) === 0 ? 0 : (a.wins / (a.wins + a.losses)) * 100;
+                const wrB = (b.wins + b.losses) === 0 ? 0 : (b.wins / (b.wins + b.losses)) * 100;
+                valA = wrA;
+                valB = wrB;
+                break;
+            default:
+                return 0;
+        }
+        if (valA < valB) return order === "asc" ? -1 : 1;
+        if (valA > valB) return order === "asc" ? 1 : -1;
+        return 0;
+    });
+    return sorted;
+}
+
+function renderRatingTable(schools) {
+    const container = document.getElementById("ratingContainer");
+    if (!schools.length) {
+        container.innerHTML = '<div class="loader">Нет данных</div>';
+        return;
+    }
+    const sorted = sortSchools(schools, currentSort.field, currentSort.order);
+    let html = `
+        <table class="rating-table">
+            <thead>
+                <tr>
+                    <th data-sort="name">Название <span class="sort-indicator">${currentSort.field === "name" ? (currentSort.order === "asc" ? "▲" : "▼") : ""}</span></th>
+                    <th data-sort="rating">Рейтинг <span class="sort-indicator">${currentSort.field === "rating" ? (currentSort.order === "asc" ? "▲" : "▼") : ""}</span></th>
+                    <th data-sort="avg_br">Сила танков (ср. БР) <span class="sort-indicator">${currentSort.field === "avg_br" ? (currentSort.order === "asc" ? "▲" : "▼") : ""}</span></th>
+                    <th data-sort="wins">Победы <span class="sort-indicator">${currentSort.field === "wins" ? (currentSort.order === "asc" ? "▲" : "▼") : ""}</span></th>
+                    <th data-sort="losses">Поражения <span class="sort-indicator">${currentSort.field === "losses" ? (currentSort.order === "asc" ? "▲" : "▼") : ""}</span></th>
+                    <th data-sort="winrate">Винрейт <span class="sort-indicator">${currentSort.field === "winrate" ? (currentSort.order === "asc" ? "▲" : "▼") : ""}</span></th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    sorted.forEach(school => {
+        const totalMatches = (school.wins || 0) + (school.losses || 0);
+        const winrate = totalMatches === 0 ? 0 : ((school.wins / totalMatches) * 100).toFixed(1);
+        html += `
+            <tr>
+                <td>${school.name}</td>
+                <td class="rating-number">${Math.round(school.rating)}</td>
+                <td>${(school.avg_br || 0).toFixed(2)}</td>
+                <td>${school.wins || 0}</td>
+                <td>${school.losses || 0}</td>
+                <td>${winrate}%</td>
+            </tr>
+        `;
+    });
+    html += `</tbody>}</table>`;
+    container.innerHTML = html;
+
+    document.querySelectorAll(".rating-table th[data-sort]").forEach(th => {
+        th.addEventListener("click", () => {
+            const field = th.getAttribute("data-sort");
+            if (currentSort.field === field) {
+                currentSort.order = currentSort.order === "asc" ? "desc" : "asc";
+            } else {
+                currentSort.field = field;
+                currentSort.order = "desc";
+            }
+            renderRatingTable(schools);
+        });
+    });
+}
+
+async function refreshRating() {
+    const container = document.getElementById("ratingContainer");
+    container.innerHTML = '<div class="loader">Обновление...</div>';
+    const schools = await loadRatingFromDB();
+    renderRatingTable(schools);
+}
+
+document.getElementById("refreshBtn").onclick = refreshRating;
+updateAuthUI().then(refreshRating);
+</script>
+</body>
+</html>

@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Карта GuP - Континент Гарпания</title>
+    <style>
+        /* ----- ОСНОВНЫЕ СТИЛИ (из index.html) ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: linear-gradient(135deg, #0a0f1e 0%, #0c1222 100%);
+            color: #eef4ff;
+            font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #openSidebarBtn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1100;
+            font-size: 26px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 40px;
+            transition: all 0.2s ease;
+        }
+        #openSidebarBtn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.02);
+        }
+        #sideMenu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 260px;
+            height: 100%;
+            background: rgba(20, 25, 40, 0.95);
+            backdrop-filter: blur(12px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 38px 16px;
+            display: none;
+            z-index: 1050;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+        }
+        #sideMenu ul {
+            list-style: none;
+            margin-top: 40px;
+        }
+        #sideMenu li {
+            margin: 24px 0;
+        }
+        #sideMenu button {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 12px;
+            border-radius: 32px;
+            color: white;
+            font-weight: 500;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: left;
+            padding-left: 20px;
+        }
+        #sideMenu button:hover {
+            background: rgba(231, 76, 60, 0.7);
+            border-color: #e74c3c;
+            transform: translateX(6px);
+        }
+        .user-info {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1100;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(10, 15, 30, 0.65);
+            backdrop-filter: blur(12px);
+            padding: 6px 18px;
+            border-radius: 60px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        .user-info:hover {
+            border-color: rgba(231, 76, 60, 0.5);
+            background: rgba(10, 15, 30, 0.8);
+        }
+        #userNameDisplay {
+            background: rgba(0, 0, 0, 0.45);
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #fff;
+            letter-spacing: 0.3px;
+            backdrop-filter: blur(4px);
+            white-space: nowrap;
+        }
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .auth-buttons button {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 7px 18px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            font-family: inherit;
+            color: #f0f0f0;
+            transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            letter-spacing: 0.3px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .auth-buttons button:hover {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            border-color: rgba(255, 255, 255, 0.7);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 18px rgba(231, 76, 60, 0.4);
+            color: white;
+        }
+        #logoutBtn {
+            background: rgba(192, 57, 43, 0.7);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+        #logoutBtn:hover {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            transform: translateY(-2px);
+        }
+
+        /* ----- КОНТЕЙНЕР ДЛЯ КАРТЫ (адаптивный) ----- */
+        .map-container {
+            max-width: 2000px;
+            width: 100%;
+            margin: 0 auto;
+            background: rgba(10, 15, 30, 0.5);
+            backdrop-filter: blur(4px);
+            border-radius: 2rem;
+            padding: 1.5rem;
+            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, #e74c3c);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        .sub {
+            text-align: center;
+            color: #bbd4f0;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #ffaa44;
+            padding-left: 1rem;
+            display: inline-block;
+            width: auto;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .map-panel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+        .canvas-area {
+            flex: 3;
+            min-width: 350px;
+            background: #0a1117;
+            border-radius: 1.5rem;
+            padding: 0.75rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            overflow-x: auto;
+        }
+        canvas {
+            width: 100%;
+            height: auto;
+            background: #1e2f3c;
+            border-radius: 1rem;
+            display: block;
+            cursor: pointer;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1), 0 4px 12px black;
+        }
+        .legend {
+            flex: 1.2;
+            min-width: 280px;
+            background: rgba(10, 20, 28, 0.75);
+            backdrop-filter: blur(12px);
+            border-radius: 1.5rem;
+            padding: 1rem;
+            border: 1px solid rgba(255,215,120,0.3);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .legend h3 {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #ffaa55;
+            padding-bottom: 0.5rem;
+        }
+        .school-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.7rem;
+        }
+        .school-card {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 1rem;
+            padding: 0.6rem 1rem;
+            border-left: 4px solid;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .school-card:hover {
+            transform: translateX(5px);
+            background: rgba(255,255,210,0.1);
+        }
+        .school-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        .territory-count {
+            background: #00000066;
+            padding: 0.1rem 0.5rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        .school-stats {
+            font-size: 0.75rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 5px;
+            align-items: center;
+        }
+        .school-stats span {
+            background: #00000055;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+        }
+        .progress-container {
+            flex: 1;
+            background: #2a2a2a;
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background: #ffaa55;
+            height: 100%;
+            width: 0%;
+        }
+        .win-button {
+            background: #2c5f2d;
+            border: none;
+            padding: 0.2rem 0.6rem;
+            border-radius: 40px;
+            color: white;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+        .win-button:hover {
+            background: #3e8e41;
+        }
+        .neutral-badge {
+            background: #2c3e2f;
+            color: #cdffb8;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        .reset-btn {
+            background: #8b0000;
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: 40px;
+            color: white;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 1rem;
+            font-weight: bold;
+        }
+        .reset-btn:hover {
+            background: #aa2222;
+        }
+        .tooltip {
+            position: fixed;
+            background: #1e2a2fdd;
+            backdrop-filter: blur(8px);
+            color: #fff5e0;
+            padding: 6px 12px;
+            border-radius: 24px;
+            font-size: 0.85rem;
+            pointer-events: none;
+            z-index: 1000;
+            border: 1px solid #ffcc77;
+            white-space: nowrap;
+        }
+        footer {
+            margin-top: 1.5rem;
+            text-align: center;
+            font-size: 0.75rem;
+            opacity: 0.7;
+        }
+        @media (max-width: 800px) {
+            body { padding: 12px; }
+            .map-container { padding: 1rem; }
+            .school-header { font-size: 0.85rem; }
+            .user-info { top: 12px; right: 12px; padding: 4px 12px; gap: 8px; }
+            .auth-buttons button { padding: 5px 12px; font-size: 0.75rem; }
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a1f2e;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e74c3c;
+            border-radius: 10px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/d3-delaunay@6.0.4/dist/d3-delaunay.min.js"></script>
+</head>
+<body>
+
+<button id="openSidebarBtn">☰</button>
+<div id="sideMenu">
+    <ul>
+        <li><button id="schoolsBtn">🏫 Школы</button></li>
+        <li><button id="matchesBtn">📅 Матчи</button></li>
+        <li><button id="tanksBtn">🛸 Танки</button></li>
+        <li><button id="wheelBtn">🎡 Колесо</button></li>
+        <li><button id="importBtn">📦 Импорт</button></li>
+        <li><button id="logsBtn">📜 Логи</button></li>
+        <li><button id="mapBtn">🗺️ Карта GuP</button></li>
+        <li><button id="ratingBtn">📊 Рейтинг</button></li>
+        <li id="adminMenuItem" style="display: none;"><button id="adminBtn">👑 Админ-панель</button></li>
+    </ul>
+</div>
+
+<div class="user-info">
+    <span id="userNameDisplay"></span>
+    <div class="auth-buttons">
+        <button id="loginBtn">Войти</button>
+        <button id="registerBtn">Регистрация</button>
+        <button id="logoutBtn">Выйти</button>
+    </div>
+</div>
+
+<div class="map-container">
+    <h1>🗺️ Континент Гарпания · GuP</h1>
+    <div style="text-align: center;">
+        <div class="sub">91 территория | Школы на побережье, между ними минимум 3 нейтральные земли</div>
+    </div>
+    <div class="map-panel">
+        <div class="canvas-area">
+            <canvas id="territoryCanvas" width="2000" height="1300" style="width:100%; height:auto; aspect-ratio:2000/1300"></canvas>
+        </div>
+        <div class="legend">
+            <h3>🏆 Школы и территории</h3>
+            <div id="legendContent" class="school-list">Загрузка...</div>
+            <div style="margin-top: 1rem; padding-top: 0.7rem; border-top: 1px solid #ffcc7733;">
+                <div class="neutral-badge">⚪ Нейтральных территорий: <span id="neutralCount">0</span></div>
+            </div>
+            <button id="resetCaptureBtn" class="reset-btn" style="display: none;">🔄 Сбросить захваты</button>
+        </div>
+    </div>
+    <footer>Нажмите на территорию школы → переход на страницу школы. За каждые 4 победы школа захватывает ближайшую нейтральную территорию (цвет меняется, название исчезает).</footer>
+</div>
+
+<script>
+// ------------------------------------------------------------------
+// АВТОРИЗАЦИЯ И НАВИГАЦИЯ (из index.html)
+// ------------------------------------------------------------------
+const api = window.location.origin;
+async function authFetch(url, options = {}) {
+    const headers = { "Content-Type": "application/json", ...options.headers };
+    return fetch(url, { ...options, headers, credentials: 'include' });
+}
+
+let currentUser = null;
+let currentUserIsAdmin = false;
+
+async function updateAuthUI() {
+    const userNameSpan = document.getElementById("userNameDisplay");
+    const loginBtn = document.getElementById("loginBtn");
+    const registerBtn = document.getElementById("registerBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const adminMenuItem = document.getElementById("adminMenuItem");
+
+    try {
+        const res = await authFetch(`${api}/me`);
+        if (res.ok) {
+            const user = await res.json();
+            currentUser = user;
+            currentUserIsAdmin = user.is_admin || false;
+            userNameSpan.textContent = user.username;
+            userNameSpan.style.display = "inline-block";
+            loginBtn.style.display = "none";
+            registerBtn.style.display = "none";
+            logoutBtn.style.display = "inline-flex";
+            if (adminMenuItem) adminMenuItem.style.display = currentUserIsAdmin ? "block" : "none";
+        } else {
+            userNameSpan.style.display = "none";
+            loginBtn.style.display = "inline-flex";
+            registerBtn.style.display = "inline-flex";
+            logoutBtn.style.display = "none";
+            if (adminMenuItem) adminMenuItem.style.display = "none";
+            currentUser = null;
+            currentUserIsAdmin = false;
+        }
+    } catch (err) {
+        console.error(err);
+        // сброс
+        userNameSpan.style.display = "none";
+        loginBtn.style.display = "inline-flex";
+        registerBtn.style.display = "inline-flex";
+        logoutBtn.style.display = "none";
+        if (adminMenuItem) adminMenuItem.style.display = "none";
+        currentUser = null;
+        currentUserIsAdmin = false;
+    }
+}
+document.getElementById("loginBtn").onclick = () => { window.location.href = "login.html"; };
+document.getElementById("registerBtn").onclick = () => { window.location.href = "register.html"; };
+document.getElementById("logoutBtn").onclick = async () => {
+    await authFetch(`${api}/logout`, { method: "POST" });
+    updateAuthUI();
+    loadSchools();
+};
+// Навигация
+document.getElementById("schoolsBtn").onclick = () => { window.location.href = "index.html"; };
+document.getElementById("matchesBtn").onclick = () => { window.location.href = "matches.html"; };
+document.getElementById("tanksBtn").onclick = () => { window.location.href = "tanks.html"; };
+document.getElementById("wheelBtn").onclick = () => { window.location.href = "wheel.html"; };
+document.getElementById("importBtn").onclick = () => { window.location.href = "import.html"; };
+document.getElementById("logsBtn").onclick = () => { window.location.href = "logs.html"; };
+document.getElementById("mapBtn").onclick = () => { window.location.href = "japan_map.html"; };
+document.getElementById("ratingBtn").onclick = () => { window.location.href = "rating.html"; };
+document.getElementById("adminBtn").onclick = () => { window.location.href = "admin.html"; };
+document.getElementById("openSidebarBtn").onclick = () => {
+    const menu = document.getElementById("sideMenu");
+    menu.style.display = menu.style.display === "block" ? "none" : "block";
+};
+updateAuthUI();
+
+// ------------------------------------------------------------------
+// ДАННЫЕ ШКОЛ ДЛЯ КАРТЫ (будут загружены из API, затем локальные)
+// ------------------------------------------------------------------
+const schoolColors = {
+    "Anzio": "#295733", "BC Freedom": "#4c78b9",
+    "BellWall": "#f6b26b", "Chi-Ha-Tan": "#816051", "Jatkosota": "#b3c6d5",
+    "Kuromorimine": "#434b4d", "Ooarai": "#5ca3d7", "Pravda": "#aa0000",
+    "Saunders": "#4b5320", "St.Gloriana": "#e27988", "Viggen": "#fecb02", "Yogurt": "#01a863"
+};
+let currentSchools = [];
+let territoriesData = [];
+let canvasElem, ctx, canvasWidth, canvasHeight;
+let tooltipDiv = null;
+
+// ------------------------------------------------------------------
+// ГЕНЕРАЦИЯ КАРТЫ (Вороной, контур, центры)
+// ------------------------------------------------------------------
+function generateContour() {
+    return [
+        [0.07, 0.27], [0.13, 0.18], [0.21, 0.11], [0.31, 0.07], [0.43, 0.04], [0.55, 0.04], [0.67, 0.06], [0.77, 0.12],
+        [0.85, 0.20], [0.91, 0.30], [0.94, 0.42], [0.93, 0.54], [0.89, 0.65], [0.82, 0.74], [0.73, 0.81], [0.63, 0.86],
+        [0.53, 0.89], [0.42, 0.90], [0.32, 0.87], [0.23, 0.81], [0.15, 0.73], [0.09, 0.63], [0.05, 0.51], [0.05, 0.39],
+        [0.07, 0.27]
+    ];
+}
+function scalePolygon(poly, w, h) {
+    return poly.map(p => [p[0] * w, p[1] * h]);
+}
+function isPointInsidePolygon(point, poly) {
+    let x = point[0], y = point[1];
+    let inside = false;
+    for (let i = 0, j = poly.length-1; i < poly.length; j = i++) {
+        let xi = poly[i][0], yi = poly[i][1];
+        let xj = poly[j][0], yj = poly[j][1];
+        let intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+    return inside;
+}
+function getPointOnContour(contourScaled, t) {
+    const totalLength = (() => {
+        let len = 0;
+        for (let i = 0; i < contourScaled.length; i++) {
+            const p1 = contourScaled[i];
+            const p2 = contourScaled[(i+1) % contourScaled.length];
+            len += Math.hypot(p2[0]-p1[0], p2[1]-p1[1]);
+        }
+        return len;
+    })();
+    let targetDist = t * totalLength;
+    let accum = 0;
+    for (let i = 0; i < contourScaled.length; i++) {
+        const p1 = contourScaled[i];
+        const p2 = contourScaled[(i+1) % contourScaled.length];
+        const segLen = Math.hypot(p2[0]-p1[0], p2[1]-p1[1]);
+        if (accum + segLen >= targetDist) {
+            const ratio = (targetDist - accum) / segLen;
+            const x = p1[0] + (p2[0]-p1[0]) * ratio;
+            const y = p1[1] + (p2[1]-p1[1]) * ratio;
+            return [x, y];
+        }
+        accum += segLen;
+    }
+    return contourScaled[0];
+}
+function generateAllCenters(contourScaled, totalNeutral, schoolCount) {
+    const schoolCenters = [];
+    for (let i = 0; i < schoolCount; i++) {
+        let t = i / schoolCount;
+        let [x, y] = getPointOnContour(contourScaled, t);
+        let cx = 0, cy = 0;
+        for (let p of contourScaled) { cx += p[0]; cy += p[1]; }
+        cx /= contourScaled.length;
+        cy /= contourScaled.length;
+        let dx = cx - x, dy = cy - y;
+        let len = Math.hypot(dx, dy);
+        if (len > 0) { dx /= len; dy /= len; }
+        let inset = 45;
+        schoolCenters.push([x + dx * inset, y + dy * inset]);
+    }
+    const boundaryNeutral = [];
+    for (let i = 0; i < schoolCount; i++) {
+        let t1 = i / schoolCount;
+        let t2 = ((i+1) / schoolCount);
+        for (let j = 1; j <= 3; j++) {
+            let t = t1 + (t2 - t1) * (j / 4);
+            let [x, y] = getPointOnContour(contourScaled, t);
+            let cx = 0, cy = 0;
+            for (let p of contourScaled) { cx += p[0]; cy += p[1]; }
+            cx /= contourScaled.length;
+            cy /= contourScaled.length;
+            let dx = cx - x, dy = cy - y;
+            let len = Math.hypot(dx, dy);
+            if (len > 0) { dx /= len; dy /= len; }
+            boundaryNeutral.push([x + dx * 25, y + dy * 25]);
+        }
+    }
+    const needed = totalNeutral - boundaryNeutral.length;
+    const internalNeutral = [];
+    const rng = (function(seed) {
+        let s = seed;
+        return function() { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+    })(4242);
+    const bbox = contourScaled.reduce((min, p) => [Math.min(min[0], p[0]), Math.min(min[1], p[1]), Math.max(min[2], p[0]), Math.max(min[3], p[1])], [Infinity, Infinity, -Infinity, -Infinity]);
+    const [minX, minY, maxX, maxY] = bbox;
+    let attempts = 0;
+    while (internalNeutral.length < needed && attempts < 30000) {
+        const x = minX + rng() * (maxX - minX);
+        const y = minY + rng() * (maxY - minY);
+        if (!isPointInsidePolygon([x, y], contourScaled)) continue;
+        let tooClose = false;
+        for (let sc of schoolCenters) {
+            if (Math.hypot(x - sc[0], y - sc[1]) < 100) { tooClose = true; break; }
+        }
+        if (!tooClose) internalNeutral.push([x, y]);
+        attempts++;
+    }
+    while (internalNeutral.length < needed) {
+        const x = minX + rng() * (maxX - minX);
+        const y = minY + rng() * (maxY - minY);
+        if (isPointInsidePolygon([x, y], contourScaled)) internalNeutral.push([x, y]);
+    }
+    const allCenters = [...schoolCenters, ...boundaryNeutral, ...internalNeutral];
+    return { schoolCenters, allCenters };
+}
+function clipPolygonByPolygon(subjectPolygon, clipPolygon) {
+    if (!subjectPolygon.length) return [];
+    function inside(p, a, b) {
+        return (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0]) >= 0;
+    }
+    function intersect(p1, p2, a, b) {
+        const a1 = p2[1] - p1[1], b1 = p1[0] - p2[0];
+        const c1 = a1 * p1[0] + b1 * p1[1];
+        const a2 = b[1] - a[1], b2 = a[0] - b[0];
+        const c2 = a2 * a[0] + b2 * a[1];
+        const det = a1 * b2 - a2 * b1;
+        if (Math.abs(det) < 1e-8) return p1;
+        const x = (b2 * c1 - b1 * c2) / det;
+        const y = (a1 * c2 - a2 * c1) / det;
+        return [x, y];
+    }
+    let outputList = subjectPolygon;
+    for (let i = 0; i < clipPolygon.length; i++) {
+        const clipEdgeStart = clipPolygon[i];
+        const clipEdgeEnd = clipPolygon[(i+1) % clipPolygon.length];
+        const inputList = outputList;
+        outputList = [];
+        if (inputList.length === 0) break;
+        let S = inputList[inputList.length-1];
+        for (let j = 0; j < inputList.length; j++) {
+            let E = inputList[j];
+            if (inside(E, clipEdgeStart, clipEdgeEnd)) {
+                if (!inside(S, clipEdgeStart, clipEdgeEnd)) outputList.push(intersect(S, E, clipEdgeStart, clipEdgeEnd));
+                outputList.push(E);
+            } else if (inside(S, clipEdgeStart, clipEdgeEnd)) {
+                outputList.push(intersect(S, E, clipEdgeStart, clipEdgeEnd));
+            }
+            S = E;
+        }
+    }
+    return outputList;
+}
+async function buildVoronoiCells(allCenters, contourScaled, width, height) {
+    const delaunay = d3.Delaunay.from(allCenters);
+    const voronoi = delaunay.voronoi([0, 0, width, height]);
+    const cells = [];
+    for (let i = 0; i < allCenters.length; i++) {
+        let poly = voronoi.cellPolygon(i);
+        if (!poly || poly.length < 3) continue;
+        let clipped = clipPolygonByPolygon(poly, contourScaled);
+        if (clipped.length >= 3) cells.push({ index: i, polygon: clipped, site: allCenters[i] });
+    }
+    return cells;
+}
+function polygonCentroid(polygon) {
+    let area = 0, cx = 0, cy = 0;
+    for (let i = 0; i < polygon.length; i++) {
+        const p1 = polygon[i];
+        const p2 = polygon[(i+1) % polygon.length];
+        const cross = p1[0] * p2[1] - p2[0] * p1[1];
+        area += cross;
+        cx += (p1[0] + p2[0]) * cross;
+        cy += (p1[1] + p2[1]) * cross;
+    }
+    area /= 2;
+    if (area === 0) return polygon[0];
+    cx /= (6 * area);
+    cy /= (6 * area);
+    return [cx, cy];
+}
+function assignOwners(voronoiCells, schools, schoolCount) {
+    let territories = [];
+    for(let idx = 0; idx < voronoiCells.length; idx++) {
+        let cell = voronoiCells[idx];
+        let ownerId = null;
+        let name = "";
+        if(idx < schoolCount) {
+            ownerId = schools[idx].id;
+            name = schools[idx].name;
+        }
+        territories.push({
+            id: idx,
+            polygon: cell.polygon,
+            centroid: polygonCentroid(cell.polygon),
+            ownerId: ownerId,
+            name: name
+        });
+    }
+    return territories;
+}
+function drawMap(territories, schools, w, h) {
+    if (!ctx) return;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = "#2c4c6c";
+    ctx.fillRect(0, 0, w, h);
+    for (let t of territories) {
+        if (!t.polygon || t.polygon.length < 3) continue;
+        let school = schools.find(s => s.id === t.ownerId);
+        let fillColor = school ? school.color : "#E8E6D9";
+        ctx.beginPath();
+        ctx.moveTo(t.polygon[0][0], t.polygon[0][1]);
+        for (let i = 1; i < t.polygon.length; i++) ctx.lineTo(t.polygon[i][0], t.polygon[i][1]);
+        ctx.closePath();
+        ctx.fillStyle = fillColor;
+        ctx.fill();
+        ctx.strokeStyle = school ? "#2a2418" : "#888";
+        ctx.lineWidth = school ? 1.5 : 1;
+        ctx.stroke();
+        if (t.name && t.name.length > 0) {
+            let fontSize = 14;
+            ctx.font = `bold ${fontSize}px 'Segoe UI'`;
+            ctx.fillStyle = school ? "#FFF" : "#111";
+            ctx.shadowBlur = 0;
+            let metrics = ctx.measureText(t.name);
+            ctx.fillText(t.name, t.centroid[0] - metrics.width / 2, t.centroid[1] + 6);
+        }
+    }
+    let contourScaled = scalePolygon(generateContour(), w, h);
+    ctx.beginPath();
+    ctx.moveTo(contourScaled[0][0], contourScaled[0][1]);
+    for (let i = 1; i < contourScaled.length; i++) ctx.lineTo(contourScaled[i][0], contourScaled[i][1]);
+    ctx.closePath();
+    ctx.strokeStyle = "#ffdd99";
+    ctx.lineWidth = 4;
+    ctx.stroke();
+}
+function captureNearestTerritory(schoolId) {
+    let school = currentSchools.find(s => s.id === schoolId);
+    if (!school) return false;
+    let neutralTerritories = territoriesData.filter(t => t.ownerId === null);
+    if (neutralTerritories.length === 0) return false;
+    let best = null, bestDist = Infinity;
+    for (let neut of neutralTerritories) {
+        let dist = Math.hypot(school.centroidX - neut.centroid[0], school.centroidY - neut.centroid[1]);
+        if (dist < bestDist) {
+            bestDist = dist;
+            best = neut;
+        }
+    }
+    if (best) {
+        best.ownerId = schoolId;
+        best.name = "";
+        return true;
+    }
+    return false;
+}
+function autoCaptureByWins(school) {
+    const territoriesOwned = territoriesData.filter(t => t.ownerId === school.id).length;
+    const expectedTerritories = 1 + Math.floor(school.wins / 4);
+    let toCapture = expectedTerritories - territoriesOwned;
+    if (toCapture <= 0) return;
+    let captured = 0;
+    for (let i = 0; i < toCapture; i++) {
+        if (captureNearestTerritory(school.id)) captured++;
+        else break;
+    }
+    if (captured > 0) {
+        saveGameState();
+        drawMap(territoriesData, currentSchools, canvasWidth, canvasHeight);
+        updateLegend(currentSchools, territoriesData);
+    }
+}
+function saveGameState() {
+    const state = territoriesData.map(t => ({ id: t.id, ownerId: t.ownerId, name: t.name }));
+    localStorage.setItem('gup_territories', JSON.stringify(state));
+}
+function loadGameState() {
+    const saved = localStorage.getItem('gup_territories');
+    if (saved && territoriesData.length) {
+        const parsed = JSON.parse(saved);
+        const validSchoolIds = new Set(currentSchools.map(s => s.id));
+        for (let p of parsed) {
+            const territory = territoriesData.find(t => t.id === p.id);
+            if (territory) {
+                if (p.ownerId !== null && validSchoolIds.has(p.ownerId)) {
+                    territory.ownerId = p.ownerId;
+                    territory.name = p.name;
+                } else {
+                    territory.ownerId = null;
+                    territory.name = "";
+                }
+            }
+        }
+        saveGameState();
+    }
+}
+function resetAllCaptures() {
+    if (!currentUserIsAdmin) {
+        showMessage("Доступ запрещён. Только администратор может сбросить захваты.");
+        return;
+    }
+    for (let school of currentSchools) {
+        school.wins = 0;
+    }
+    for (let i = 0; i < territoriesData.length; i++) {
+        const t = territoriesData[i];
+        if (i < currentSchools.length) {
+            const school = currentSchools[i];
+            if (school) {
+                t.ownerId = school.id;
+                t.name = school.name;
+            }
+        } else {
+            t.ownerId = null;
+            t.name = "";
+        }
+    }
+    saveGameState();
+    drawMap(territoriesData, currentSchools, canvasWidth, canvasHeight);
+    updateLegend(currentSchools, territoriesData);
+    showMessage("✅ Все захваты сброшены, победы обнулены");
+}
+function pointInPolygon(point, polygon) {
+    let inside = false;
+    for (let i = 0, j = polygon.length-1; i < polygon.length; j = i++) {
+        let xi = polygon[i][0], yi = polygon[i][1];
+        let xj = polygon[j][0], yj = polygon[j][1];
+        let intersect = ((yi > point[1]) != (yj > point[1])) && (point[0] < (xj - xi) * (point[1] - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+    return inside;
+}
+function handleCanvasClick(e, territories, schools) {
+    const rect = canvasElem.getBoundingClientRect();
+    const scaleX = canvasElem.width / rect.width;
+    const scaleY = canvasElem.height / rect.height;
+    let mx = (e.clientX - rect.left) * scaleX;
+    let my = (e.clientY - rect.top) * scaleY;
+    for (let t of territories) {
+        if (t.polygon && pointInPolygon([mx, my], t.polygon)) {
+            if (t.ownerId !== null) {
+                window.location.href = `school.html?id=${t.ownerId}`;
+            } else {
+                showMessage("⚪ Нейтральная территория, пока не захвачена");
+            }
+            return;
+        }
+    }
+}
+function showMessage(msg) {
+    let div = document.createElement('div');
+    div.innerText = msg;
+    div.style.position = 'fixed';
+    div.style.bottom = '20px';
+    div.style.left = '20px';
+    div.style.backgroundColor = '#000000aa';
+    div.style.backdropFilter = 'blur(8px)';
+    div.style.padding = '8px 18px';
+    div.style.borderRadius = '40px';
+    div.style.color = '#ffecb3';
+    div.style.zIndex = 2000;
+    div.style.border = '1px solid #ffaa55';
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 1800);
+}
+function updateLegend(schools, territories) {
+    let legendDiv = document.getElementById('legendContent');
+    if (!legendDiv) return;
+    let territoryCount = new Map();
+    territories.forEach(t => {
+        if (t.ownerId) territoryCount.set(t.ownerId, (territoryCount.get(t.ownerId) || 0) + 1);
+    });
+    let neutralCount = territories.filter(t => t.ownerId === null).length;
+    document.getElementById('neutralCount').innerText = neutralCount;
+    let html = '';
+    for (let school of schools) {
+        let count = territoryCount.get(school.id) || 0;
+        let winsMod = school.wins % 4;
+        let progressPercent = (winsMod / 4) * 100;
+        html += `
+            <div class="school-card" style="border-left-color: ${school.color};">
+                <div class="school-header">
+                    <span>🏫 ${school.name}</span>
+                    <span class="territory-count">${count} тер.</span>
+                </div>
+                <div class="school-stats">
+                    <span>🏆 побед: ${school.wins}</span>
+                    <div class="progress-container">
+                        <div class="progress-fill" style="width: ${progressPercent}%;"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    legendDiv.innerHTML = html;
+}
+async function loadSchoolsFromAPI() {
+    try {
+        const res = await fetch(`${api}/schools/`);
+        if (!res.ok) throw new Error();
+        const schools = await res.json();
+        return schools.map(s => ({
+            id: s.id,
+            name: s.name,
+            wins: s.wins || 0,
+            rating: s.rating || 1500,
+            color: schoolColors[s.name] || "#888888"
+        }));
+    } catch (err) {
+        console.warn("Не удалось загрузить школы из API, использую демо-данные");
+        return [
+            { id: 1, name: "Pravda", wins: 12, rating: 1520, color: schoolColors["Pravda"] },
+            { id: 2, name: "Ooarai", wins: 10, rating: 1480, color: schoolColors["Ooarai"] },
+            { id: 3, name: "Kuromorimine", wins: 14, rating: 1600, color: schoolColors["Kuromorimine"] },
+            { id: 4, name: "Saunders", wins: 7, rating: 1390, color: schoolColors["Saunders"] },
+            { id: 5, name: "BellWall", wins: 9, rating: 1450, color: schoolColors["BellWall"] },
+            { id: 6, name: "Jatkosota", wins: 11, rating: 1510, color: schoolColors["Jatkosota"] },
+            { id: 7, name: "Chi-Ha-Tan", wins: 6, rating: 1360, color: schoolColors["Chi-Ha-Tan"] },
+            { id: 8, name: "St.Gloriana", wins: 13, rating: 1550, color: schoolColors["St.Gloriana"] },
+            { id: 9, name: "Viggen", wins: 8, rating: 1420, color: schoolColors["Viggen"] },
+            { id: 10, name: "Yogurt", wins: 5, rating: 1330, color: schoolColors["Yogurt"] },
+            { id: 12, name: "Anzio", wins: 6, rating: 1380, color: schoolColors["Anzio"] },
+            { id: 13, name: "BC Freedom", wins: 9, rating: 1470, color: schoolColors["BC Freedom"] }
+        ];
+    }
+}
+async function initMap() {
+    canvasElem = document.getElementById('territoryCanvas');
+    ctx = canvasElem.getContext('2d');
+    canvasWidth = canvasElem.width;
+    canvasHeight = canvasElem.height;
+    let contourRel = generateContour();
+    let contourScaled = scalePolygon(contourRel, canvasWidth, canvasHeight);
+    currentSchools = await loadSchoolsFromAPI();
+    const schoolCount = currentSchools.length;
+    const totalTerritories = 91;
+    const neutralCount = totalTerritories - schoolCount;
+    const { schoolCenters, allCenters } = generateAllCenters(contourScaled, neutralCount, schoolCount);
+    let voronoiCells = await buildVoronoiCells(allCenters, contourScaled, canvasWidth, canvasHeight);
+    if (voronoiCells.length < totalTerritories) console.warn(`Получено ${voronoiCells.length} ячеек, ожидалось ${totalTerritories}`);
+    territoriesData = assignOwners(voronoiCells, currentSchools, schoolCenters.length);
+    loadGameState();
+    for (let school of currentSchools) {
+        let terr = territoriesData.find(t => t.ownerId === school.id);
+        if (terr) {
+            school.centroidX = terr.centroid[0];
+            school.centroidY = terr.centroid[1];
+        }
+    }
+    for (let school of currentSchools) {
+        autoCaptureByWins(school);
+    }
+    drawMap(territoriesData, currentSchools, canvasWidth, canvasHeight);
+    updateLegend(currentSchools, territoriesData);
+    canvasElem.addEventListener('click', (e) => handleCanvasClick(e, territoriesData, currentSchools));
+    canvasElem.addEventListener('mousemove', (e) => {
+        const rect = canvasElem.getBoundingClientRect();
+        const scaleX = canvasElem.width / rect.width;
+        const scaleY = canvasElem.height / rect.height;
+        let mx = (e.clientX - rect.left) * scaleX;
+        let my = (e.clientY - rect.top) * scaleY;
+        let hover = null;
+        for (let t of territoriesData) {
+            if (t.polygon && pointInPolygon([mx, my], t.polygon)) { hover = t; break; }
+        }
+        if (hover) {
+            let owner = currentSchools.find(s => s.id === hover.ownerId);
+            let ownerName = owner ? owner.name : "Нейтральная";
+            if (!tooltipDiv) {
+                tooltipDiv = document.createElement('div');
+                tooltipDiv.className = 'tooltip';
+                document.body.appendChild(tooltipDiv);
+            }
+            tooltipDiv.style.left = (e.clientX + 15) + 'px';
+            tooltipDiv.style.top = (e.clientY - 30) + 'px';
+            tooltipDiv.innerText = hover.name ? `${hover.name} — ${ownerName}` : ownerName;
+            tooltipDiv.style.opacity = '1';
+        } else {
+            if (tooltipDiv) tooltipDiv.style.opacity = '0';
+        }
+    });
+    canvasElem.addEventListener('mouseleave', () => { if (tooltipDiv) tooltipDiv.style.opacity = '0'; });
+    document.getElementById('resetCaptureBtn').addEventListener('click', resetAllCaptures);
+}
+initMap();
+</script>
+</body>
+</html>

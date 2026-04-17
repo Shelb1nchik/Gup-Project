@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GuP Schools | Girls und Panzer</title>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    background: linear-gradient(135deg, #0a0f1e 0%, #0c1222 100%);
+    color: #eef4ff;
+    font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    padding: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+#openSidebarBtn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1100;
+    font-size: 26px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 40px;
+    transition: all 0.2s ease;
+}
+#openSidebarBtn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.02);
+}
+
+/* Боковое меню */
+#sideMenu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    height: 100%;
+    background: rgba(20, 25, 40, 0.95);
+    backdrop-filter: blur(12px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 38px 16px;
+    display: none;
+    z-index: 1050;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+}
+#sideMenu ul {
+    list-style: none;
+    margin-top: 40px;
+}
+#sideMenu li {
+    margin: 24px 0;
+}
+#sideMenu button {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 12px;
+    border-radius: 32px;
+    color: white;
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.2s;
+    text-align: left;
+    padding-left: 20px;
+}
+#sideMenu button:hover {
+    background: rgba(231, 76, 60, 0.7);
+    border-color: #e74c3c;
+    transform: translateX(6px);
+}
+.container {
+    max-width: 500px;
+    width: 100%;
+    margin: 0 auto;
+    padding-top: 20px;
+}
+
+/* === НОВЫЙ СТИЛЬ ДЛЯ БЛОКА АВТОРИЗАЦИИ (FIXED) === */
+.user-info {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(10, 15, 30, 0.65);
+    backdrop-filter: blur(12px);
+    padding: 6px 18px;
+    border-radius: 60px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+.user-info:hover {
+    border-color: rgba(231, 76, 60, 0.5);
+    background: rgba(10, 15, 30, 0.8);
+}
+
+#userNameDisplay {
+    background: rgba(0, 0, 0, 0.45);
+    padding: 6px 14px;
+    border-radius: 40px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #fff;
+    letter-spacing: 0.3px;
+    backdrop-filter: blur(4px);
+    white-space: nowrap;
+}
+
+/* Кнопки — стиль "glassmorphism" + градиент при ховере */
+.auth-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.auth-buttons button {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 7px 18px;
+    border-radius: 40px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: inherit;
+    color: #f0f0f0;
+    transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.auth-buttons button:hover {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    border-color: rgba(255, 255, 255, 0.7);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 18px rgba(231, 76, 60, 0.4);
+    color: white;
+}
+
+#logoutBtn {
+    background: rgba(192, 57, 43, 0.7);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+#logoutBtn:hover {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    transform: translateY(-2px);
+}
+
+/* Заголовок */
+h1 {
+    text-align: center;
+    font-size: 2.2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #fff, #e74c3c);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 32px;
+    letter-spacing: -0.5px;
+}
+#schools {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.school-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    width: 100%;
+    text-align: left;
+    color: white;
+    background: rgba(25, 30, 45, 0.7);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    border-radius: 28px;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    font-size: 1rem;
+}
+.school-button:hover {
+    transform: translateY(-2px);
+    background: rgba(35, 40, 60, 0.9);
+    border-color: rgba(231, 76, 60, 0.5);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+.school-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.school-flag-img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+.school-balance {
+    background: rgba(0,0,0,0.4);
+    padding: 4px 12px;
+    border-radius: 40px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #f1c40f;
+}
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #1a1f2e;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+    background: #e74c3c;
+    border-radius: 10px;
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 550px) {
+    .container { padding: 0 10px; }
+    h1 { font-size: 1.8rem; }
+    .school-button { padding: 10px 16px; }
+    .school-flag-img { width: 22px; height: 22px; }
+
+    .user-info {
+        top: 12px;
+        right: 12px;
+        padding: 4px 12px;
+        gap: 8px;
+    }
+    .auth-buttons {
+        gap: 6px;
+    }
+    .auth-buttons button {
+        padding: 5px 12px;
+        font-size: 0.75rem;
+        gap: 4px;
+    }
+    #userNameDisplay {
+        padding: 4px 10px;
+        font-size: 0.75rem;
+    }
+}
+</style>
+</head>
+<body>
+
+<button id="openSidebarBtn">☰</button>
+<div id="sideMenu">
+    <ul>
+        <li><button id="schoolsBtn">🏫 Школы</button></li>
+        <li><button id="matchesBtn">📅 Матчи</button></li>
+        <li><button id="tanksBtn">🛸 Танки</button></li>
+        <li><button id="wheelBtn">🎡 Колесо</button></li>
+        <li><button id="importBtn">📦 Импорт</button></li>
+        <li><button id="logsBtn">📜 Логи</button></li>
+        <li><button id="mapBtn">🗺️ Карта GuP</button></li>
+        <li><button id="ratingBtn">📊 Рейтинг</button></li>
+        <li id="adminMenuItem" style="display: none;"><button id="adminBtn">👑 Админ-панель</button></li>
+    </ul>
+</div>
+
+<div class="user-info">
+    <span id="userNameDisplay"></span>
+    <div class="auth-buttons">
+        <button id="loginBtn"> Войти</button>
+        <button id="registerBtn">Регистрация</button>
+        <button id="logoutBtn">Выйти</button>
+    </div>
+</div>
+
+<div class="container">
+    <h1>⚔️ GuP Schools</h1>
+    <div id="schools"></div>
+</div>
+
+<script>
+const api = window.location.origin;
+
+function formatNumber(num) {
+    if (num === undefined || num === null) return '0';
+    const number = typeof num === 'number' ? num : parseFloat(num);
+    if (isNaN(number)) return '0';
+    return number.toLocaleString('ru-RU');
+}
+
+async function authFetch(url, options = {}) {
+    const headers = { "Content-Type": "application/json", ...options.headers };
+    return fetch(url, { ...options, headers, credentials: 'include' });
+}
+
+let currentUser = null;
+let currentUserIsAdmin = false;
+
+async function updateAuthUI() {
+    const userNameSpan = document.getElementById("userNameDisplay");
+    const loginBtn = document.getElementById("loginBtn");
+    const registerBtn = document.getElementById("registerBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const adminMenuItem = document.getElementById("adminMenuItem");
+
+    try {
+        const res = await authFetch(`${api}/me`);
+        if (res.ok) {
+            const user = await res.json();
+            currentUser = user;
+            currentUserIsAdmin = user.is_admin || false;
+            userNameSpan.textContent = user.username;
+            userNameSpan.style.display = "inline-block";
+            loginBtn.style.display = "none";
+            registerBtn.style.display = "none";
+            logoutBtn.style.display = "inline-flex";
+            if (adminMenuItem) adminMenuItem.style.display = currentUserIsAdmin ? "block" : "none";
+        } else {
+            userNameSpan.style.display = "none";
+            loginBtn.style.display = "inline-flex";
+            registerBtn.style.display = "inline-flex";
+            logoutBtn.style.display = "none";
+            if (adminMenuItem) adminMenuItem.style.display = "none";
+            currentUser = null;
+            currentUserIsAdmin = false;
+        }
+    } catch (err) {
+        console.error(err);
+        // сброс
+        userNameSpan.style.display = "none";
+        loginBtn.style.display = "inline-flex";
+        registerBtn.style.display = "inline-flex";
+        logoutBtn.style.display = "none";
+        if (adminMenuItem) adminMenuItem.style.display = "none";
+        currentUser = null;
+        currentUserIsAdmin = false;
+    }
+}
+
+document.getElementById("loginBtn").onclick = () => {
+    window.location.href = "login.html";
+};
+document.getElementById("registerBtn").onclick = () => {
+    window.location.href = "register.html";
+};
+document.getElementById("logoutBtn").onclick = async () => {
+    await authFetch(`${api}/logout`, { method: "POST" });
+    updateAuthUI();
+    loadSchools();
+};
+
+const schoolColors = {
+    "Anzio": "#295733", "BC Freedom": "#4c78b9",
+    "BellWall": "#f6b26b", "Chi-Ha-Tan": "#816051", "Jatkosota": "#b3c6d5",
+    "Kuromorimine": "#434b4d", "Ooarai": "#5ca3d7", "Pravda": "#aa0000",
+    "Saunders": "#4b5320", "St.Gloriana": "#e27988", "Viggen": "#fecb02", "Yogurt": "#01a863"
+};
+
+const flagFileMap = {
+    "Anzio": "flags/anzio.jpg",
+    "BC Freedom": "flags/bc_freedom.jpg",
+    "BellWall": "flags/bellwall.jpg",
+    "Chi-Ha-Tan": "flags/chi_ha_tan.jpg",
+    "Jatkosota": "flags/jatkosota.jpg",
+    "Kuromorimine": "flags/kuromorimine.jpg",
+    "Ooarai": "flags/oarai.jpg",
+    "Pravda": "flags/pravda.jpg",
+    "Saunders": "flags/saunders.jpg",
+    "St.Gloriana": "flags/stgloriana.jpg",
+    "Viggen": "flags/viggen.jpg",
+    "Yogurt": "flags/yogurt.jpg"
+};
+
+function getFlagPath(schoolName) {
+    const file = flagFileMap[schoolName];
+    return file ? `images/${file}` : null;
+}
+
+async function loadSchools() {
+    const res = await fetch(`${api}/schools/`);
+    if (!res.ok) {
+        console.error("Не удалось загрузить школы");
+        return;
+    }
+    const data = await res.json();
+    const container = document.getElementById("schools");
+    container.innerHTML = "";
+    data.forEach(s => {
+        const btn = document.createElement("button");
+        btn.className = "school-button";
+
+        const nameWrapper = document.createElement("div");
+        nameWrapper.className = "school-name";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = s.name;
+        const flagImg = document.createElement("img");
+        const flagPath = getFlagPath(s.name);
+        if (flagPath) {
+            flagImg.src = flagPath;
+            flagImg.alt = `Флаг ${s.name}`;
+            flagImg.className = "school-flag-img";
+            flagImg.onerror = () => { flagImg.style.display = "none"; };
+        } else {
+            flagImg.style.display = "none";
+        }
+        nameWrapper.appendChild(nameSpan);
+        nameWrapper.appendChild(flagImg);
+
+        const balanceSpan = document.createElement("div");
+        balanceSpan.className = "school-balance";
+        balanceSpan.textContent = formatNumber(s.balance);
+
+        btn.appendChild(nameWrapper);
+        btn.appendChild(balanceSpan);
+        btn.style.background = `linear-gradient(95deg, ${schoolColors[s.name] || "#2e2e2e"}CC, ${schoolColors[s.name] || "#2e2e2e"}99)`;
+        btn.onclick = () => { window.location.href = `school.html?id=${s.id}`; };
+        container.appendChild(btn);
+    });
+}
+
+document.getElementById("schoolsBtn").onclick = () => {
+    document.getElementById("sideMenu").style.display = "none";
+};
+document.getElementById("matchesBtn").onclick = () => {
+    window.location.href = "matches.html";
+};
+document.getElementById("tanksBtn").onclick = () => {
+    window.location.href = "tanks.html";
+};
+document.getElementById("wheelBtn").onclick = () => {
+    window.location.href = "wheel.html";
+};
+document.getElementById("adminBtn").onclick = () => {
+    window.location.href = "admin.html";
+};
+document.getElementById("importBtn").onclick = () => {
+    window.location.href = "import.html";
+};
+document.getElementById("logsBtn").onclick = () => {
+    window.location.href = "logs.html";
+};
+document.getElementById("mapBtn").onclick = () => {
+    window.location.href = "japan_map.html";
+};
+document.getElementById("ratingBtn").onclick = () => {
+    window.location.href = "rating.html";
+};
+
+document.getElementById("openSidebarBtn").onclick = () => {
+    const menu = document.getElementById("sideMenu");
+    menu.style.display = menu.style.display === "block" ? "none" : "block";
+};
+
+updateAuthUI().then(() => loadSchools());
+</script>
+</body>
+</html>

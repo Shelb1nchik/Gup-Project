@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Колесо фортуны | Girls und Panzer</title>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    background: linear-gradient(135deg, #0a0f1e 0%, #0c1222 100%);
+    color: #eef4ff;
+    font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    padding: 24px;
+}
+/* Сайдбар */
+#openSidebarBtn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1100;
+    font-size: 26px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 40px;
+    transition: all 0.2s ease;
+    width: auto;
+    display: inline-block;
+    line-height: 1;
+}
+#openSidebarBtn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.02);
+}
+#sideMenu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    height: 100%;
+    background: rgba(20, 25, 40, 0.95);
+    backdrop-filter: blur(12px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 38px 16px;
+    display: none;
+    z-index: 1050;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+}
+#sideMenu ul {
+    list-style: none;
+    margin-top: 40px;
+}
+#sideMenu li {
+    margin: 24px 0;
+}
+#sideMenu button {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 12px;
+    border-radius: 32px;
+    color: white;
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.2s;
+    text-align: left;
+    padding-left: 20px;
+}
+#sideMenu button:hover {
+    background: rgba(231, 76, 60, 0.7);
+    border-color: #e74c3c;
+    transform: translateX(6px);
+}
+/* Основной контент */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-top: 60px;
+}
+h1 {
+    text-align: center;
+    font-size: 2.2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #fff, #e74c3c);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 40px;
+}
+.wheels-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 40px;
+    margin-bottom: 60px;
+}
+.wheel-card {
+    background: rgba(25, 30, 45, 0.5);
+    backdrop-filter: blur(4px);
+    border-radius: 32px;
+    padding: 24px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: 0.2s;
+}
+.wheel-card:hover {
+    background: rgba(35, 40, 60, 0.6);
+}
+.wheel-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #e74c3c;
+}
+.wheel {
+    width: 180px;
+    height: 180px;
+    margin: 0 auto 20px;
+    background: radial-gradient(circle at 30% 30%, #2a2a2a, #1a1a1a);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 0 6px rgba(231,76,60,0.3), 0 10px 25px rgba(0,0,0,0.5);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.wheel span {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+.spin {
+    animation: spin-animation 0.8s cubic-bezier(0.4, 2.0, 0.6, 1.0) forwards;
+}
+@keyframes spin-animation {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.editable-list {
+    margin-top: 16px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 20px;
+    padding: 12px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+.editable-list ul {
+    list-style: none;
+    margin-bottom: 12px;
+}
+.editable-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #1a1f2e;
+    margin: 6px 0;
+    padding: 6px 12px;
+    border-radius: 40px;
+    font-size: 0.85rem;
+}
+.editable-list li button {
+    background: #e74c3c;
+    border: none;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+}
+.editable-list li button:hover {
+    background: #c0392b;
+}
+.add-item {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+.add-item input {
+    flex: 1;
+    background: #1e2438;
+    border: 1px solid #2a3348;
+    border-radius: 40px;
+    padding: 8px 12px;
+    color: white;
+}
+.add-item button {
+    background: #2c5f2d;
+    border: none;
+    border-radius: 40px;
+    padding: 0 16px;
+    color: white;
+    cursor: pointer;
+}
+.spin-all {
+    text-align: center;
+}
+#spinBtn {
+    background: linear-gradient(95deg, #e74c3c, #c0392b);
+    border: none;
+    padding: 14px 40px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    border-radius: 60px;
+    cursor: pointer;
+    transition: 0.2s;
+    box-shadow: 0 4px 15px rgba(231,76,60,0.4);
+}
+#spinBtn:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px rgba(231,76,60,0.6);
+}
+
+/* ========== НОВЫЙ СТИЛЬ БЛОКА АВТОРИЗАЦИИ (как на главной) ========== */
+.user-info {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(10, 15, 30, 0.65);
+    backdrop-filter: blur(12px);
+    padding: 6px 18px;
+    border-radius: 60px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+.user-info:hover {
+    border-color: rgba(231, 76, 60, 0.5);
+    background: rgba(10, 15, 30, 0.8);
+}
+#userNameDisplay {
+    background: rgba(0, 0, 0, 0.45);
+    padding: 6px 14px;
+    border-radius: 40px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #fff;
+    letter-spacing: 0.3px;
+    backdrop-filter: blur(4px);
+    white-space: nowrap;
+}
+.auth-buttons {
+    display: flex;
+    gap: 10px;
+}
+.auth-buttons button {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 7px 18px;
+    border-radius: 40px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: inherit;
+    color: #f0f0f0;
+    transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.auth-buttons button:hover {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    border-color: rgba(255, 255, 255, 0.7);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 18px rgba(231, 76, 60, 0.4);
+    color: white;
+}
+#logoutBtn {
+    background: rgba(192, 57, 43, 0.7);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+#logoutBtn:hover {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    transform: translateY(-2px);
+}
+/* ========== КОНЕЦ НОВЫХ СТИЛЕЙ ========== */
+
+@media (max-width: 700px) {
+    .wheels-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    .wheel {
+        width: 150px;
+        height: 150px;
+    }
+    .user-info {
+        top: 12px;
+        right: 12px;
+        padding: 4px 12px;
+        gap: 8px;
+    }
+    .auth-buttons {
+        gap: 6px;
+    }
+    .auth-buttons button {
+        padding: 5px 12px;
+        font-size: 0.75rem;
+        gap: 4px;
+    }
+    #userNameDisplay {
+        padding: 4px 10px;
+        font-size: 0.75rem;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="user-info">
+    <span id="userNameDisplay" style="display: none;"></span>
+    <div class="auth-buttons">
+        <button id="loginBtn" style="display: none;">Войти</button>
+        <button id="registerBtn" style="display: none;">Регистрация</button>
+        <button id="logoutBtn" style="display: none;">Выйти</button>
+    </div>
+</div>
+
+<button id="openSidebarBtn">☰</button>
+<div id="sideMenu">
+    <ul>
+        <li><button id="schoolsBtn">🏫 Школы</button></li>
+        <li><button id="matchesBtn">📅 Матчи</button></li>
+        <li><button id="tanksBtn">🛸 Танки</button></li>
+        <li><button id="wheelBtn">🎡 Колесо</button></li>
+        <li><button id="importBtn">📦 Импорт</button></li>
+        <li><button id="logsBtn">📜 Логи</button></li>
+        <li><button id="mapBtn">🗺️ Карта GuP</button></li>
+        <li><button id="ratingBtn">📊 Рейтинг</button></li>
+        <li id="adminMenuItem" style="display: none;"><button id="adminBtn">👑 Админ-панель</button></li>
+    </ul>
+</div>
+
+<div class="container">
+    <h1>🎡 Колесо фортуны</h1>
+    <div class="wheels-grid" id="wheelsGrid"></div>
+    <div class="spin-all">
+        <button id="spinBtn">🌀 Крутить всё! 🌀</button>
+    </div>
+</div>
+
+<script>
+const api = window.location.origin;
+
+async function authFetch(url, options = {}) {
+    const headers = { "Content-Type": "application/json", ...options.headers };
+    return fetch(url, { ...options, headers, credentials: 'include' });
+}
+
+let currentUserIsAdmin = false;
+
+async function updateAuthUI() {
+    const userNameSpan = document.getElementById("userNameDisplay");
+    const loginBtn = document.getElementById("loginBtn");
+    const registerBtn = document.getElementById("registerBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const adminMenuItem = document.getElementById("adminMenuItem");
+
+    try {
+        const res = await authFetch(`${api}/me`);
+        if (res.ok) {
+            const user = await res.json();
+            if (userNameSpan) {
+                userNameSpan.textContent = user.username;
+                userNameSpan.style.display = "inline-block";
+            }
+            if (loginBtn) loginBtn.style.display = "none";
+            if (registerBtn) registerBtn.style.display = "none";
+            if (logoutBtn) logoutBtn.style.display = "inline-flex";
+            currentUserIsAdmin = user.is_admin || false;
+            if (adminMenuItem) adminMenuItem.style.display = currentUserIsAdmin ? "block" : "none";
+        } else {
+            // Не авторизован
+            if (userNameSpan) userNameSpan.style.display = "none";
+            if (loginBtn) loginBtn.style.display = "inline-flex";
+            if (registerBtn) registerBtn.style.display = "inline-flex";
+            if (logoutBtn) logoutBtn.style.display = "none";
+            if (adminMenuItem) adminMenuItem.style.display = "none";
+            currentUserIsAdmin = false;
+        }
+    } catch (err) {
+        console.error(err);
+        // При ошибке сети считаем неавторизованным
+        if (userNameSpan) userNameSpan.style.display = "none";
+        if (loginBtn) loginBtn.style.display = "inline-flex";
+        if (registerBtn) registerBtn.style.display = "inline-flex";
+        if (logoutBtn) logoutBtn.style.display = "none";
+        if (adminMenuItem) adminMenuItem.style.display = "none";
+        currentUserIsAdmin = false;
+    }
+}
+
+document.getElementById("loginBtn")?.addEventListener("click", () => {
+    window.location.href = "login.html";
+});
+document.getElementById("registerBtn")?.addEventListener("click", () => {
+    window.location.href = "register.html";
+});
+document.getElementById("logoutBtn").onclick = async () => {
+    await authFetch(`${api}/logout`, { method: "POST" });
+    updateAuthUI();
+    loadSchools();
+};
+
+// Сайдбар
+document.getElementById("openSidebarBtn").onclick = () => {
+    const sideMenu = document.getElementById("sideMenu");
+    sideMenu.style.display = sideMenu.style.display === "block" ? "none" : "block";
+};
+document.getElementById("schoolsBtn").onclick = () => { window.location.href = "index.html"; };
+document.getElementById("matchesBtn").onclick = () => { window.location.href = "matches.html"; };
+document.getElementById("tanksBtn").onclick = () => { window.location.href = "tanks.html"; };
+document.getElementById("wheelBtn").onclick = () => { window.location.href = "wheel.html"; };
+document.getElementById("importBtn").onclick = () => { window.location.href = "import.html"; };
+document.getElementById("adminBtn").onclick = () => { window.location.href = "admin.html"; };
+document.getElementById("logsBtn").onclick = () => { window.location.href = "logs.html"; };
+document.getElementById("ratingBtn").onclick = () => {window.location.href = "rating.html"; };
+document.getElementById("mapBtn").onclick = () => {window.location.href = "japan_map.html"; };
+
+// ------------------- Списки по умолчанию -------------------
+const defaultLists = {
+    maps: [
+        "Джунгли", "Карелия", "Карпаты", "Кубань", "Огненная дуга",
+        "Пепельная река", "Моздок", "Польша", "Поля Польши", "Восточная Европа",
+        "Европейская провинция", "Крепость «Белая скала»", "Берлин", "Нормандия",
+        "Поля Нормандии", "Хюртгенский лес", "Финляндия", "Переправа через Рейн",
+        "Сталинград", "Второе сражение за Эль-Аламейн", "Тунис", "Пески Туниса",
+        "Волоколамск", "Окрестности Волоколамска", "Ледяной Перевал", "Порт Новороссийск",
+        "Синай", "Пески Синая", "38-я Параллель", "Заброшенный завод", "Арденны",
+        "Япония", "Фульда", "Линия Мажино", "Ближний Восток", "Кампания",
+        "Американская пустыня", "Вьетнам", "Аляска", "Морской терминал", "Швеция",
+        "Эпицентр", "Северск-13", "Красные пески", "Бреслау", "Космодром",
+        "Аральское море", "Солнечный город", "Заброшенный город", "Прадеш",
+        "Арктика", "Золотой карьер", "Польша (зима)", "Арденны (зима)", "Линия Мажино (зима)",
+        "Северск-13 (зима)", "Иберийская крепость", "Испытательный полигон – 2271", "Фландрия", "Северная Голландия"
+    ],
+    time: ["Рассвет", "Утро", "Полдень", "День", "Вечер", "Закат", "Ночь", "7:00", "8:00", "9:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"],
+    capture: ["1", "2", "3", "4"],
+    weather: ["Ясно", "Небольшая облачность", "Дымка", "Туман", "Тонкая облачность", "Грозовые тучи", "Облачность", "Сплошная облачность", "Низкая облачность", "Нулевая видимость", "Дождь", "Шторм"]
+};
+
+function loadList(key) {
+    const stored = localStorage.getItem(`wheel_${key}`);
+    if (stored) {
+        try {
+            return JSON.parse(stored);
+        } catch(e) { return defaultLists[key]; }
+    }
+    return defaultLists[key];
+}
+function saveList(key, list) {
+    localStorage.setItem(`wheel_${key}`, JSON.stringify(list));
+}
+
+const wheelsData = [
+    { id: "maps", title: "🗺️ Карты", list: loadList("maps") },
+    { id: "time", title: "⏰ Время", list: loadList("time") },
+    { id: "capture", title: "🏁 Захват", list: loadList("capture") },
+    { id: "weather", title: "🌦️ Погода", list: loadList("weather") }
+];
+
+let currentResults = {};
+
+function spinWheel(wheelId, wheelList, resultSpan) {
+    if (wheelList.length === 0) {
+        resultSpan.textContent = "❌";
+        currentResults[wheelId] = null;
+        return;
+    }
+    resultSpan.parentElement.classList.add("spin");
+    setTimeout(() => {
+        resultSpan.parentElement.classList.remove("spin");
+        const randomIndex = Math.floor(Math.random() * wheelList.length);
+        const chosen = wheelList[randomIndex];
+        resultSpan.textContent = chosen;
+        currentResults[wheelId] = chosen;
+    }, 800);
+}
+
+function createWheelCard(wheel) {
+    const card = document.createElement("div");
+    card.className = "wheel-card";
+    card.dataset.id = wheel.id;
+
+    const title = document.createElement("div");
+    title.className = "wheel-title";
+    title.textContent = wheel.title;
+    card.appendChild(title);
+
+    const wheelDiv = document.createElement("div");
+    wheelDiv.className = "wheel";
+    const wheelSpan = document.createElement("span");
+    wheelSpan.id = `result_${wheel.id}`;
+    wheelSpan.textContent = currentResults[wheel.id] || "?";
+    wheelDiv.appendChild(wheelSpan);
+    card.appendChild(wheelDiv);
+
+    wheelDiv.onclick = () => {
+        spinWheel(wheel.id, wheel.list, wheelSpan);
+    };
+
+    const listContainer = document.createElement("div");
+    listContainer.className = "editable-list";
+    const ul = document.createElement("ul");
+    ul.id = `list_${wheel.id}`;
+    listContainer.appendChild(ul);
+
+    const addDiv = document.createElement("div");
+    addDiv.className = "add-item";
+    const input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = "Новый вариант";
+    const addBtn = document.createElement("button");
+    addBtn.textContent = "+";
+    addBtn.onclick = () => {
+        const val = input.value.trim();
+        if (val && !wheel.list.includes(val)) {
+            wheel.list.push(val);
+            saveList(wheel.id, wheel.list);
+            renderList(wheel.id, ul, wheel.list);
+            input.value = "";
+        }
+    };
+    addDiv.appendChild(input);
+    addDiv.appendChild(addBtn);
+    listContainer.appendChild(addDiv);
+    card.appendChild(listContainer);
+
+    function renderList(id, ulElement, list) {
+        ulElement.innerHTML = "";
+        list.forEach((item, idx) => {
+            const li = document.createElement("li");
+            li.textContent = item;
+            const delBtn = document.createElement("button");
+            delBtn.textContent = "✖";
+            delBtn.onclick = () => {
+                wheel.list.splice(idx, 1);
+                saveList(wheel.id, wheel.list);
+                renderList(id, ulElement, wheel.list);
+                if (currentResults[wheel.id] === item) {
+                    document.getElementById(`result_${wheel.id}`).textContent = "?";
+                    delete currentResults[wheel.id];
+                }
+            };
+            li.appendChild(delBtn);
+            ulElement.appendChild(li);
+        });
+    }
+    renderList(wheel.id, ul, wheel.list);
+    return card;
+}
+
+function spinAll() {
+    const wheels = document.querySelectorAll(".wheel");
+    wheels.forEach(w => {
+        const wheelId = w.closest(".wheel-card").dataset.id;
+        const wheelData = wheelsData.find(wd => wd.id === wheelId);
+        const resultSpan = w.querySelector("span");
+        spinWheel(wheelId, wheelData.list, resultSpan);
+    });
+}
+
+function init() {
+    const container = document.getElementById("wheelsGrid");
+    container.innerHTML = "";
+    wheelsData.forEach(wheel => {
+        container.appendChild(createWheelCard(wheel));
+    });
+    document.getElementById("spinBtn").onclick = spinAll;
+}
+
+updateAuthUI().then(init);
+</script>
+</body>
+</html>

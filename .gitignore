@@ -1,0 +1,9 @@
+*.mp4
+*.mov
+*.webm
+frontend/uploads/backgrounds/
+frontend/images/backgrounds/*.mp4
+venv/
+__pycache__/
+*.pyc
+.idea/

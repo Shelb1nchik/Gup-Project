@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Админ-панель | Girls und Panzer</title>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    background: linear-gradient(135deg, #0a0f1e 0%, #0c1222 100%);
+    color: #eef4ff;
+    font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    padding: 24px;
+}
+#openSidebarBtn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1100;
+    font-size: 26px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 40px;
+    transition: all 0.2s ease;
+    width: auto !important;
+    display: inline-block !important;
+    line-height: 1;
+}
+#openSidebarBtn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.02);
+}
+#sideMenu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    height: 100%;
+    background: rgba(20, 25, 40, 0.95);
+    backdrop-filter: blur(12px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 38px 16px;
+    display: none;
+    z-index: 1050;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+}
+#sideMenu ul {
+    list-style: none;
+    margin-top: 40px;
+}
+#sideMenu li {
+    margin: 16px 0;
+}
+#sideMenu button {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 12px;
+    border-radius: 32px;
+    color: white;
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.2s;
+    text-align: left;
+    padding-left: 20px;
+}
+#sideMenu button:hover {
+    background: rgba(231, 76, 60, 0.7);
+    border-color: #e74c3c;
+    transform: translateX(6px);
+}
+.container {
+    max-width: 1000px;
+    margin: 60px auto 0;
+    background: rgba(25, 30, 45, 0.5);
+    backdrop-filter: blur(4px);
+    border-radius: 36px;
+    padding: 28px;
+}
+h1, h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+select, button, input {
+    background: #1e2438;
+    border: 1px solid #2a3348;
+    border-radius: 40px;
+    padding: 8px 16px;
+    color: white;
+    margin: 5px 0;
+    width: 100%;
+}
+button {
+    background: #2c5f2d;
+    cursor: pointer;
+}
+button.delete-btn {
+    background: #c0392b;
+}
+.role-list {
+    margin-top: 20px;
+    border-top: 1px solid #2a3348;
+    padding-top: 16px;
+}
+.role-item {
+    background: rgba(0,0,0,0.3);
+    margin: 8px 0;
+    padding: 8px;
+    border-radius: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.role-item button {
+    width: auto;
+    background: #c0392b;
+    padding: 4px 12px;
+}
+.user-info {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1200;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background: rgba(10, 15, 30, 0.65);
+    backdrop-filter: blur(12px);
+    padding: 6px 18px;
+    border-radius: 60px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+#userNameDisplay {
+    background: rgba(0,0,0,0.45);
+    padding: 6px 14px;
+    border-radius: 40px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #fff;
+    white-space: nowrap;
+}
+#logoutBtn {
+    background: rgba(192,57,43,0.7);
+    border: none;
+    padding: 4px 12px;
+    border-radius: 40px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    width: auto;
+}
+#logoutBtn:hover {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    transform: translateY(-2px);
+}
+hr {
+    margin: 30px 0;
+    border-color: #2a3348;
+}
+.form-group {
+    margin-bottom: 15px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 0.85rem;
+}
+th, td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #2a3348;
+}
+th {
+    background: rgba(0,0,0,0.3);
+}
+td button {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    margin: 2px;
+}
+.modal {
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(8px);
+    display: none;
+    overflow-y: auto;
+}
+.modal-content {
+    background: #121826;
+    margin: 5% auto;
+    padding: 28px;
+    border-radius: 32px;
+    width: 800px;
+    max-width: 90%;
+    border: 1px solid rgba(255,255,255,0.1);
+    position: relative;
+    max-height: 85vh;
+    overflow-y: auto;
+}
+.close {
+    position: absolute;
+    top: 12px;
+    right: 20px;
+    font-size: 28px;
+    cursor: pointer;
+    color: #aaa;
+}
+.close:hover {
+    color: #e74c3c;
+}
+.section {
+    margin-bottom: 40px;
+}
+.section-header {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+.section-header button {
+    width: auto;
+    background: #2c5f2d;
+    font-size: 1rem;
+}
+.match-card {
+    background: rgba(0,0,0,0.3);
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: 0.1s;
+}
+.match-card:hover {
+    background: rgba(231,76,60,0.2);
+    transform: translateX(4px);
+}
+.match-card .match-date {
+    font-size: 0.8rem;
+    color: #aaa;
+    margin-bottom: 4px;
+}
+.match-card .match-teams {
+    font-weight: bold;
+}
+.match-card .match-score {
+    font-size: 0.85rem;
+    color: #f1c40f;
+}
+.result-team-section {
+    background: rgba(0,0,0,0.3);
+    border-radius: 24px;
+    padding: 16px;
+    margin: 16px 0;
+}
+.result-school-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin: 8px 0;
+    padding: 8px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 16px;
+    flex-wrap: wrap;
+}
+.result-school-name {
+    font-weight: bold;
+    min-width: 120px;
+}
+.result-school-inputs {
+    display: flex;
+    gap: 16px;
+}
+.result-school-inputs label {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.8rem;
+    gap: 4px;
+}
+.result-school-inputs input {
+    width: 80px;
+    padding: 4px 8px;
+}
+.tanks-deaths-section {
+    margin: 12px 0 0 20px;
+    padding: 8px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 16px;
+}
+.tank-death-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 6px 0;
+    padding: 4px 8px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+}
+.tank-death-name {
+    font-size: 0.85rem;
+}
+.tank-death-input {
+    width: 70px;
+    padding: 4px 8px;
+    text-align: center;
+}
+.mercenary-item {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    background: rgba(255,255,255,0.1);
+    margin: 8px 0;
+    padding: 8px;
+    border-radius: 16px;
+}
+</style>
+</head>
+<body>
+
+<button id="openSidebarBtn">☰</button>
+<div id="sideMenu">
+    <ul>
+        <li><button id="schoolsBtn">🏫 Школы</button></li>
+        <li><button id="matchesBtn">📅 Матчи</button></li>
+        <li><button id="tanksBtn">🛸 Танки</button></li>
+        <li><button id="wheelBtn">🎡 Колесо</button></li>
+        <li><button id="importBtn">📦 Импорт</button></li>
+        <li><button id="logsBtn">📜 Логи</button></li>
+        <li><button id="mapBtn">🗺️ Карта GuP</button></li>
+        <li><button id="ratingBtn">📊 Рейтинг</button></li>
+        <li><button id="adminBtn">👑 Админ-панель</button></li>
+    </ul>
+</div>
+
+<div class="user-info">
+    <span id="userNameDisplay"></span>
+    <button id="logoutBtn">Выйти</button>
+</div>
+
+<div class="container">
+    <div class="section-header">
+        <button id="showRolesBtn">👥 Управление ролями</button>
+        <button id="showImportsBtn">📦 Управление импортами</button>
+        <button id="showMatchesBtn">📋 Посчитанные матчи</button>
+    </div>
+
+    <!-- Секция ролей -->
+    <div id="rolesSection" class="section">
+        <h1>🔧 Управление ролями</h1>
+        <div>
+            <label>Пользователь:</label>
+            <select id="userSelect"></select>
+        </div>
+        <div>
+            <label>Школа:</label>
+            <select id="schoolSelect"></select>
+        </div>
+        <div>
+            <label>Роль:</label>
+            <select id="roleSelect">
+                <option value="commander">Командир</option>
+                <option value="deputy">Заместитель командира</option>
+            </select>
+        </div>
+        <button id="assignBtn">Назначить роль</button>
+        <div id="rolesContainer" class="role-list"></div>
+    </div>
+
+    <!-- Секция импортов -->
+    <div id="importsSection" class="section" style="display: none;">
+        <h2>➕ Создать импорт</h2>
+        <div class="form-group">
+            <label>Дата и время отображения (МСК):</label>
+            <input type="datetime-local" id="displayDate" required>
+        </div>
+        <div class="form-group">
+            <label>Дата и время начала заявок (МСК):</label>
+            <input type="datetime-local" id="startDate" required>
+        </div>
+        <div class="form-group">
+            <label>Дата и время окончания заявок (МСК):</label>
+            <input type="datetime-local" id="endDate" required>
+        </div>
+        <div class="form-group">
+            <label>Min BR (по умолчанию 0.3):</label>
+            <input type="number" id="minBr" step="0.1" value="0.3">
+        </div>
+        <div class="form-group">
+            <label>Max BR (по умолчанию 7.7):</label>
+            <input type="number" id="maxBr" step="0.1" value="7.7">
+        </div>
+        <div class="form-group">
+            <label>Количество танков:</label>
+            <input type="number" id="tanksCount" value="8" min="1">
+        </div>
+        <button id="createImportBtn">Создать импорт</button>
+
+        <hr>
+
+        <h2>📋 Список импортов</h2>
+        <table id="importsTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Отображение</th>
+                    <th>Начало заявок</th>
+                    <th>Конец заявок</th>
+                    <th>BR</th>
+                    <th>Танков</th>
+                    <th>Активен</th>
+                    <th>Розыгрыш</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Секция матчей -->
+    <div id="matchesSection" class="section" style="display: none;">
+        <h2>📋 Посчитанные матчи</h2>
+        <div id="calculatedMatchesList"></div>
+    </div>
+</div>
+
+<!-- Модальное окно редактирования импорта -->
+<div id="editImportModal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="closeEditModal">&times;</span>
+        <h2>✏️ Редактировать импорт</h2>
+        <input type="hidden" id="editEventId">
+        <div class="form-group">
+            <label>Дата отображения (МСК):</label>
+            <input type="datetime-local" id="editDisplayDate" required>
+        </div>
+        <div class="form-group">
+            <label>Начало заявок (МСК):</label>
+            <input type="datetime-local" id="editStartDate" required>
+        </div>
+        <div class="form-group">
+            <label>Окончание заявок (МСК):</label>
+            <input type="datetime-local" id="editEndDate" required>
+        </div>
+        <div class="form-group">
+            <label>Min BR:</label>
+            <input type="number" id="editMinBr" step="0.1" value="0.3">
+        </div>
+        <div class="form-group">
+            <label>Max BR:</label>
+            <input type="number" id="editMaxBr" step="0.1" value="7.7">
+        </div>
+        <div class="form-group">
+            <label>Количество танков:</label>
+            <input type="number" id="editTanksCount" value="8" min="1">
+        </div>
+        <button id="saveEditImportBtn">💾 Сохранить изменения</button>
+    </div>
+</div>
+
+<!-- Модальное окно редактирования результата матча -->
+<div id="editMatchResultModal" class="modal">
+    <div class="modal-content" style="width: 900px;">
+        <span class="close" id="closeMatchEditModal">&times;</span>
+        <h2>✏️ Редактировать результат матча #<span id="editMatchId"></span></h2>
+        <form id="editMatchForm">
+            <div class="form-group">
+                <label>Судья:</label>
+                <select id="editRefereeSchool"></select>
+            </div>
+            <div class="form-group">
+                <label>Победитель:</label>
+                <select id="editWinnerTeam">
+                    <option value="1">Команда 1</option>
+                    <option value="2">Команда 2</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Счёт (победитель всегда первый):</label>
+                <input type="text" id="editScore" placeholder="3:1">
+            </div>
+            <div id="editTeamsResultsContainer"></div>
+            <div style="display: flex; justify-content: center; gap: 16px; margin-top: 20px;">
+                <button type="button" id="saveEditMatchBtn" style="background: #2c5f2d;">💾 Сохранить изменения</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+const api = window.location.origin;
+
+async function authFetch(url, options = {}) {
+    const headers = { "Content-Type": "application/json", ...options.headers };
+    return fetch(url, { ...options, headers, credentials: 'include' });
+}
+
+let schoolsMap = {};
+let currentEditingMatch = null;
+
+// ---------- Сайдбар ----------
+const sideMenu = document.getElementById("sideMenu");
+document.getElementById("openSidebarBtn").onclick = () => {
+    sideMenu.style.display = sideMenu.style.display === "block" ? "none" : "block";
+};
+document.getElementById("schoolsBtn").onclick = () => { window.location.href = "index.html"; };
+document.getElementById("matchesBtn").onclick = () => { window.location.href = "matches.html"; };
+document.getElementById("tanksBtn").onclick = () => { window.location.href = "tanks.html"; };
+document.getElementById("wheelBtn").onclick = () => { window.location.href = "wheel.html"; };
+document.getElementById("importBtn").onclick = () => { window.location.href = "import.html"; };
+document.getElementById("adminBtn").onclick = () => { window.location.href = "admin.html"; };
+document.getElementById("logsBtn").onclick = () => { window.location.href = "logs.html"; };
+document.getElementById("ratingBtn").onclick = () => {window.location.href = "rating.html"; };
+document.getElementById("mapBtn").onclick = () => {window.location.href = "japan_map.html"; };
+
+// ---------- Выход ----------
+document.getElementById("logoutBtn").onclick = async () => {
+    await authFetch(`${api}/logout`, { method: "POST" });
+    window.location.href = "login.html";
+};
+
+// ---------- Переключение секций ----------
+document.getElementById("showRolesBtn").onclick = () => {
+    document.getElementById("rolesSection").style.display = "block";
+    document.getElementById("importsSection").style.display = "none";
+    document.getElementById("matchesSection").style.display = "none";
+};
+document.getElementById("showImportsBtn").onclick = () => {
+    document.getElementById("rolesSection").style.display = "none";
+    document.getElementById("importsSection").style.display = "block";
+    document.getElementById("matchesSection").style.display = "none";
+    loadImports();
+};
+document.getElementById("showMatchesBtn").onclick = () => {
+    document.getElementById("rolesSection").style.display = "none";
+    document.getElementById("importsSection").style.display = "none";
+    document.getElementById("matchesSection").style.display = "block";
+    loadCalculatedMatches();
+};
+
+// ---------- Управление ролями ----------
+async function loadUsers() {
+    const res = await authFetch(`${api}/admin/users`);
+    const users = await res.json();
+    const select = document.getElementById("userSelect");
+    select.innerHTML = "";
+    users.forEach(u => {
+        const option = document.createElement("option");
+        option.value = u.id;
+        option.textContent = u.username;
+        select.appendChild(option);
+    });
+}
+
+async function loadSchools() {
+    const res = await authFetch(`${api}/admin/schools`);
+    const schools = await res.json();
+    const select = document.getElementById("schoolSelect");
+    select.innerHTML = "";
+    schools.forEach(s => {
+        schoolsMap[s.id] = s.name;
+        const option = document.createElement("option");
+        option.value = s.id;
+        option.textContent = s.name;
+        select.appendChild(option);
+    });
+}
+
+async function loadRoles(userId) {
+    const res = await authFetch(`${api}/admin/roles/${userId}`);
+    const roles = await res.json();
+    const container = document.getElementById("rolesContainer");
+    container.innerHTML = "<h3>Текущие роли</h3>";
+    if (roles.length === 0) {
+        container.innerHTML += "<p>Нет назначенных ролей</p>";
+    } else {
+        roles.forEach(r => {
+            const div = document.createElement("div");
+            div.className = "role-item";
+            div.innerHTML = `
+                <span>${schoolsMap[r.school_id] || `Школа ${r.school_id}`} — ${r.role === "commander" ? "Командир" : "Заместитель"}</span>
+                <button onclick="removeRole(${userId}, ${r.school_id}, '${r.role}')">✖</button>
+            `;
+            container.appendChild(div);
+        });
+    }
+}
+
+async function assignRole() {
+    const userId = document.getElementById("userSelect").value;
+    const schoolId = document.getElementById("schoolSelect").value;
+    const role = document.getElementById("roleSelect").value;
+    if (!userId || !schoolId) return;
+    const res = await authFetch(`${api}/admin/assign_role`, {
+        method: "POST",
+        body: JSON.stringify({ user_id: parseInt(userId), school_id: parseInt(schoolId), role })
+    });
+    if (res.ok) {
+        alert("Роль назначена");
+        loadRoles(userId);
+    } else {
+        const err = await res.json();
+        alert("Ошибка: " + (err.detail || ""));
+    }
+}
+
+async function removeRole(userId, schoolId, role) {
+    const res = await authFetch(`${api}/admin/remove_role`, {
+        method: "DELETE",
+        body: JSON.stringify({ user_id: userId, school_id: schoolId, role })
+    });
+    if (res.ok) {
+        loadRoles(userId);
+    } else {
+        alert("Ошибка удаления");
+    }
+}
+
+document.getElementById("assignBtn").onclick = assignRole;
+document.getElementById("userSelect").onchange = () => {
+    const userId = document.getElementById("userSelect").value;
+    if (userId) loadRoles(userId);
+};
+
+// ---------- Управление импортами ----------
+document.getElementById("createImportBtn").onclick = async () => {
+    const displayDate = document.getElementById("displayDate").value;
+    const startDate = document.getElementById("startDate").value;
+    const endDate = document.getElementById("endDate").value;
+    const minBr = parseFloat(document.getElementById("minBr").value);
+    const maxBr = parseFloat(document.getElementById("maxBr").value);
+    const tanksCount = parseInt(document.getElementById("tanksCount").value);
+    if (!displayDate || !startDate || !endDate) {
+        alert("Укажите все три даты");
+        return;
+    }
+    const params = new URLSearchParams({
+        display_date: displayDate,
+        start_date: startDate,
+        end_date: endDate,
+        min_br: minBr,
+        max_br: maxBr,
+        tanks_count: tanksCount
+    });
+    try {
+        const res = await authFetch(`${api}/admin/import/create?${params.toString()}`, { method: "POST" });
+        const data = await res.json();
+        if (res.ok) {
+            alert("Импорт создан!");
+            document.getElementById("displayDate").value = "";
+            document.getElementById("startDate").value = "";
+            document.getElementById("endDate").value = "";
+            loadImports();
+        } else {
+            alert("Ошибка: " + (data.detail || "Неизвестная ошибка"));
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Ошибка соединения с сервером");
+    }
+};
+
+async function loadImports() {
+    const res = await authFetch(`${api}/admin/imports`);
+    const imports = await res.json();
+    const tbody = document.querySelector("#importsTable tbody");
+    tbody.innerHTML = "";
+    for (const imp of imports) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${imp.id}</td>
+            <td>${new Date(imp.display_date).toLocaleString()}</td>
+            <td>${new Date(imp.start_date).toLocaleString()}</td>
+            <td>${new Date(imp.end_date).toLocaleString()}</td>
+            <td>${imp.min_br} - ${imp.max_br}</td>
+            <td>${imp.tanks_count}</td>
+            <td>${imp.is_active ? "✅" : "❌"}</td>
+            <td>${imp.is_drawn ? "✅" : "❌"}</td>
+            <td>
+                <button onclick="openEditModal(${imp.id})">✏️ Редактировать</button>
+                ${!imp.is_drawn ? `<button onclick="drawImport(${imp.id})">🎲 Розыгрыш</button>` : ""}
+                <button onclick="deleteImport(${imp.id})">🗑️ Удалить</button>
+             </td>
+        `;
+        tbody.appendChild(tr);
+    }
+}
+
+async function drawImport(eventId) {
+    if (confirm("Провести розыгрыш? Победители получат танки, деньги спишутся.")) {
+        const res = await authFetch(`${api}/admin/import/draw/${eventId}`, { method: "POST" });
+        if (res.ok) {
+            alert("Розыгрыш проведён");
+            loadImports();
+        } else {
+            const err = await res.json();
+            alert("Ошибка: " + (err.detail || ""));
+        }
+    }
+}
+
+async function deleteImport(eventId) {
+    if (confirm("Удалить импорт навсегда? Это действие необратимо.")) {
+        const res = await authFetch(`${api}/admin/import/${eventId}`, { method: "DELETE" });
+        if (res.ok) loadImports();
+    }
+}
+
+let currentEditEventId = null;
+async function openEditModal(eventId) {
+    currentEditEventId = eventId;
+    const res = await authFetch(`${api}/admin/imports`);
+    const imports = await res.json();
+    const imp = imports.find(i => i.id === eventId);
+    if (!imp) return;
+    document.getElementById("editEventId").value = eventId;
+    document.getElementById("editDisplayDate").value = imp.display_date.slice(0, 16);
+    document.getElementById("editStartDate").value = imp.start_date.slice(0, 16);
+    document.getElementById("editEndDate").value = imp.end_date.slice(0, 16);
+    document.getElementById("editMinBr").value = imp.min_br;
+    document.getElementById("editMaxBr").value = imp.max_br;
+    document.getElementById("editTanksCount").value = imp.tanks_count;
+    document.getElementById("editImportModal").style.display = "block";
+}
+document.getElementById("closeEditModal").onclick = () => {
+    document.getElementById("editImportModal").style.display = "none";
+};
+document.getElementById("saveEditImportBtn").onclick = async () => {
+    const eventId = document.getElementById("editEventId").value;
+    const displayDate = document.getElementById("editDisplayDate").value;
+    const startDate = document.getElementById("editStartDate").value;
+    const endDate = document.getElementById("editEndDate").value;
+    const minBr = parseFloat(document.getElementById("editMinBr").value);
+    const maxBr = parseFloat(document.getElementById("editMaxBr").value);
+    const tanksCount = parseInt(document.getElementById("editTanksCount").value);
+    if (!displayDate || !startDate || !endDate) {
+        alert("Заполните все даты");
+        return;
+    }
+    const body = {
+        display_date: displayDate,
+        start_date: startDate,
+        end_date: endDate,
+        min_br: minBr,
+        max_br: maxBr,
+        tanks_count: tanksCount
+    };
+    try {
+        const res = await authFetch(`${api}/admin/import/${eventId}`, {
+            method: "PUT",
+            body: JSON.stringify(body)
+        });
+        if (res.ok) {
+            alert("Импорт обновлён");
+            document.getElementById("editImportModal").style.display = "none";
+            loadImports();
+        } else {
+            const err = await res.json();
+            alert("Ошибка: " + (err.detail || "Неизвестная ошибка"));
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Ошибка соединения с сервером");
+    }
+};
+
+// ---------- Управление матчами ----------
+async function loadCalculatedMatches() {
+    const res = await authFetch(`${api}/admin/matches/calculated`);
+    const matches = await res.json();
+    const container = document.getElementById("calculatedMatchesList");
+    container.innerHTML = "";
+    if (matches.length === 0) {
+        container.innerHTML = "<p>Нет посчитанных матчей</p>";
+        return;
+    }
+    matches.forEach(m => {
+        const card = document.createElement("div");
+        card.className = "match-card";
+        card.innerHTML = `
+            <div class="match-date">${new Date(m.date_time).toLocaleString()}</div>
+            <div class="match-teams">${m.team1} vs ${m.team2}</div>
+            <div class="match-score">Счёт: ${m.score} (победитель команда ${m.winner_team})</div>
+        `;
+        card.onclick = () => openEditMatchResult(m.id);
+        container.appendChild(card);
+    });
+}
+
+// Функция для создания секции потерь для школы
+function createTankDeathsSection(school, maxDeaths, existingDeathsMap = new Map()) {
+    const container = document.createElement("div");
+    container.className = "tanks-deaths-section";
+    container.innerHTML = `<div style="font-weight:bold; margin-bottom:6px;">💀 Потери (каждый экземпляр):</div>`;
+    school.tanks.forEach(tank => {
+        const tankId = tank.tank_id || tank.id;
+        if (!tankId) return;
+        for (let i = 0; i < tank.quantity; i++) {
+            const deathValue = existingDeathsMap.get(tankId) || 0;
+            const rowDiv = document.createElement("div");
+            rowDiv.className = "tank-death-row";
+            rowDiv.innerHTML = `
+                <span class="tank-death-name">${tank.name}</span>
+                <input type="number" class="tank-death-input" min="0" max="${maxDeaths}" value="${deathValue}" step="1" data-tank-id="${tankId}">
+            `;
+            const input = rowDiv.querySelector(".tank-death-input");
+            input.addEventListener("change", function() {
+                let val = parseInt(this.value);
+                if (isNaN(val)) val = 0;
+                if (val < 0) val = 0;
+                if (val > maxDeaths) val = maxDeaths;
+                this.value = val;
+            });
+            container.appendChild(rowDiv);
+        }
+    });
+    return container;
+}
+
+async function openEditMatchResult(matchId) {
+    // Получаем полный объект матча через обычный эндпоинт (публичный)
+    const res = await fetch(`${api}/matches/${matchId}`);
+    const match = await res.json();
+    if (!match) {
+        alert("Матч не найден");
+        return;
+    }
+    currentEditingMatch = match;
+
+    // Получаем текущий сохранённый результат (чтобы заполнить потери, бонусы, штрафы)
+    const matchResultRes = await authFetch(`${api}/admin/matches/calculated`);
+    const matchesList = await matchResultRes.json();
+    const matchData = matchesList.find(m => m.id == matchId);
+    const resultData = matchData ? matchData.result_data : null;
+    const team1Result = resultData ? resultData.team1_schools : [];
+    const team2Result = resultData ? resultData.team2_schools : [];
+
+    // Загружаем школы для выбора судьи
+    const schoolsRes = await fetch(`${api}/schools/`);
+    const schools = await schoolsRes.json();
+    const refereeSelect = document.getElementById("editRefereeSchool");
+    refereeSelect.innerHTML = '<option value="">— Не выбрано —</option>';
+    schools.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.id;
+        opt.textContent = s.name;
+        if (matchData && matchData.referee_school_id === s.id) opt.selected = true;
+        refereeSelect.appendChild(opt);
+    });
+
+    document.getElementById("editMatchId").textContent = match.id;
+    document.getElementById("editWinnerTeam").value = (matchData && matchData.winner_team) || 1;
+    document.getElementById("editScore").value = (matchData && matchData.score) || "0:0";
+
+    const container = document.getElementById("editTeamsResultsContainer");
+    container.innerHTML = "";
+
+    function createTeamSection(teamNumber, teamName, schoolsList, resultSchools, color) {
+        const section = document.createElement("div");
+        section.className = "result-team-section";
+        section.innerHTML = `<h4 style="color:${color};">${teamName}</h4>`;
+        (schoolsList || []).forEach(school => {
+            const schoolResult = resultSchools.find(rs => rs.school_id === school.id);
+            const bonus = schoolResult ? schoolResult.bonuses : 0;
+            const penalty = schoolResult ? schoolResult.penalties : 0;
+            const tankDeathsMap = new Map();
+            if (schoolResult && schoolResult.tank_deaths) {
+                schoolResult.tank_deaths.forEach(d => tankDeathsMap.set(d.tank_id, d.deaths));
+            }
+
+            const row = document.createElement("div");
+            row.className = "result-school-row";
+            row.dataset.schoolId = school.id;
+            row.dataset.team = teamNumber;
+            row.innerHTML = `
+                <div class="result-school-name">${school.name}</div>
+                <div class="result-school-inputs">
+                    <label>Бонусы: <input type="number" class="bonus-input" value="${bonus}" min="0" step="1"></label>
+                    <label>Штрафы: <input type="number" class="penalty-input" value="${penalty}" min="0" step="1"></label>
+                </div>
+            `;
+            section.appendChild(row);
+            const maxDeaths = parseInt(match.format);
+            const deathsSection = createTankDeathsSection(school, maxDeaths, tankDeathsMap);
+            section.appendChild(deathsSection);
+        });
+        return section;
+    }
+
+    function addMercenaryRow(container, teamNumber, schoolId = null, activity = "medium") {
+        const mercDiv = document.createElement("div");
+        mercDiv.className = "mercenary-item";
+        mercDiv.dataset.team = teamNumber;
+        const schoolSelect = document.createElement("select");
+        schoolSelect.className = "mercenary-school";
+        schoolSelect.innerHTML = '<option value="">Выбрать школу</option>';
+        for (const id in schoolsMap) {
+            const opt = document.createElement("option");
+            opt.value = id;
+            opt.textContent = schoolsMap[id];
+            if (schoolId && schoolId == id) opt.selected = true;
+            schoolSelect.appendChild(opt);
+        }
+        const activitySelect = document.createElement("select");
+        activitySelect.className = "mercenary-activity";
+        activitySelect.innerHTML = `
+            <option value="low" ${activity === "low" ? "selected" : ""}>Низкая</option>
+            <option value="medium" ${activity === "medium" ? "selected" : ""}>Средняя</option>
+            <option value="high" ${activity === "high" ? "selected" : ""}>Высокая</option>
+        `;
+        const removeBtn = document.createElement("button");
+        removeBtn.textContent = "✖";
+        removeBtn.style.background = "#880000";
+        removeBtn.style.width = "30px";
+        removeBtn.style.height = "30px";
+        removeBtn.onclick = () => mercDiv.remove();
+        mercDiv.appendChild(schoolSelect);
+        mercDiv.appendChild(activitySelect);
+        mercDiv.appendChild(removeBtn);
+        container.appendChild(mercDiv);
+    }
+
+    const team1Section = createTeamSection(1, "🔴 Команда 1", match.team1 || [], team1Result, "#e74c3c");
+    const team2Section = createTeamSection(2, "🔵 Команда 2", match.team2 || [], team2Result, "#3b82f6");
+    container.appendChild(team1Section);
+    container.appendChild(team2Section);
+
+    // Добавляем контейнеры для наёмников в каждую секцию
+    const mercenariesData = (resultData && resultData.mercenaries) || [];
+    const mercsForTeam1 = mercenariesData.filter(m => m.team == 1);
+    const mercsForTeam2 = mercenariesData.filter(m => m.team == 2);
+
+    const mercContainer1 = document.createElement("div");
+    mercContainer1.className = "mercenaries-container";
+    mercContainer1.innerHTML = "<div style='font-weight:bold; margin-top:12px;'>🤝 Наёмники команды 1</div>";
+    const addMercBtn1 = document.createElement("button");
+    addMercBtn1.textContent = "+ Добавить наёмника";
+    addMercBtn1.style.background = "#2c5f2d";
+    addMercBtn1.style.marginTop = "8px";
+    addMercBtn1.type = "button";
+    addMercBtn1.onclick = () => addMercenaryRow(mercContainer1, 1);
+    team1Section.appendChild(mercContainer1);
+    team1Section.appendChild(addMercBtn1);
+    mercsForTeam1.forEach(merc => addMercenaryRow(mercContainer1, 1, merc.school_id, merc.activity));
+
+    const mercContainer2 = document.createElement("div");
+    mercContainer2.className = "mercenaries-container";
+    mercContainer2.innerHTML = "<div style='font-weight:bold; margin-top:12px;'>🤝 Наёмники команды 2</div>";
+    const addMercBtn2 = document.createElement("button");
+    addMercBtn2.textContent = "+ Добавить наёмника";
+    addMercBtn2.style.background = "#2c5f2d";
+    addMercBtn2.style.marginTop = "8px";
+    addMercBtn2.type = "button";
+    addMercBtn2.onclick = () => addMercenaryRow(mercContainer2, 2);
+    team2Section.appendChild(mercContainer2);
+    team2Section.appendChild(addMercBtn2);
+    mercsForTeam2.forEach(merc => addMercenaryRow(mercContainer2, 2, merc.school_id, merc.activity));
+
+    document.getElementById("editMatchResultModal").style.display = "block";
+}
+
+document.getElementById("closeMatchEditModal").onclick = () => {
+    document.getElementById("editMatchResultModal").style.display = "none";
+};
+
+// Сбор данных из формы и отправка
+document.getElementById("saveEditMatchBtn").onclick = async () => {
+    const matchId = document.getElementById("editMatchId").textContent;
+    const refereeId = document.getElementById("editRefereeSchool").value;
+    const winnerTeam = parseInt(document.getElementById("editWinnerTeam").value);
+    const score = document.getElementById("editScore").value;
+
+    const team1_schools = [];
+    const team2_schools = [];
+
+    const teamSections = document.querySelectorAll("#editTeamsResultsContainer .result-team-section");
+    for (let idx = 0; idx < teamSections.length; idx++) {
+        const section = teamSections[idx];
+        const team = idx === 0 ? 1 : 2;
+        const schoolRows = section.querySelectorAll(".result-school-row");
+        for (const row of schoolRows) {
+            const schoolId = parseInt(row.dataset.schoolId);
+            const bonus = parseInt(row.querySelector(".bonus-input").value) || 0;
+            const penalty = parseInt(row.querySelector(".penalty-input").value) || 0;
+            const deathsSection = row.parentElement.querySelector(".tanks-deaths-section");
+            const deathInputs = deathsSection.querySelectorAll(".tank-death-input");
+            const tankDeaths = [];
+            deathInputs.forEach(inp => {
+                const tankId = parseInt(inp.dataset.tankId);
+                const deaths = parseInt(inp.value) || 0;
+                if (deaths > 0) {
+                    tankDeaths.push({ tank_id: tankId, deaths });
+                }
+            });
+            const schoolData = {
+                school_id: schoolId,
+                bonuses: bonus,
+                penalties: penalty,
+                tank_deaths: tankDeaths
+            };
+            if (team === 1) team1_schools.push(schoolData);
+            else team2_schools.push(schoolData);
+        }
+    }
+
+    // Сбор наёмников
+    const mercenaries = [];
+    document.querySelectorAll("#editTeamsResultsContainer .mercenary-item").forEach(merc => {
+        const schoolSelect = merc.querySelector(".mercenary-school");
+        const activity = merc.querySelector(".mercenary-activity").value;
+        const schoolId = schoolSelect.value;
+        if (schoolId) {
+            mercenaries.push({
+                school_id: parseInt(schoolId),
+                activity: activity,
+                team: parseInt(merc.dataset.team)
+            });
+        }
+    });
+
+    const payload = {
+        referee_school_id: refereeId ? parseInt(refereeId) : null,
+        winner_team: winnerTeam,
+        score: score,
+        team1_schools: team1_schools,
+        team2_schools: team2_schools,
+        mercenaries: mercenaries
+    };
+
+    try {
+        const res = await authFetch(`${api}/admin/matches/${matchId}/result`, {
+            method: "PUT",
+            body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+            alert("Результат обновлён и пересчитан!");
+            document.getElementById("editMatchResultModal").style.display = "none";
+            loadCalculatedMatches();
+        } else {
+            const err = await res.json();
+            alert("Ошибка: " + (err.detail || "Неизвестная ошибка"));
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Ошибка соединения с сервером");
+    }
+};
+
+// ---------- Загрузка текущего пользователя ----------
+async function loadCurrentUser() {
+    try {
+        const res = await authFetch(`${api}/me`);
+        if (res.ok) {
+            const user = await res.json();
+            document.getElementById("userNameDisplay").textContent = user.username;
+        } else {
+            window.location.href = "login.html";
+        }
+    } catch (err) {
+        console.error(err);
+        window.location.href = "login.html";
+    }
+}
+
+loadCurrentUser();
+loadSchools().then(() => {
+    loadUsers();
+    // По умолчанию показываем секцию ролей
+    document.getElementById("rolesSection").style.display = "block";
+    document.getElementById("importsSection").style.display = "none";
+    document.getElementById("matchesSection").style.display = "none";
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Логи школы | Girls und Panzer</title>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    background: linear-gradient(135deg, #0a0f1e 0%, #0c1222 100%);
+    color: #eef4ff;
+    font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    padding: 24px;
+}
+#openSidebarBtn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1100;
+    font-size: 26px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 40px;
+    transition: all 0.2s ease;
+    width: auto !important;
+    display: inline-block !important;
+    line-height: 1;
+}
+#openSidebarBtn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.02);
+}
+#sideMenu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    height: 100%;
+    background: rgba(20, 25, 40, 0.95);
+    backdrop-filter: blur(12px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 38px 16px;
+    display: none;
+    z-index: 1050;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+}
+#sideMenu ul {
+    list-style: none;
+    margin-top: 40px;
+}
+#sideMenu li {
+    margin: 16px 0;
+}
+#sideMenu button {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 12px;
+    border-radius: 32px;
+    color: white;
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.2s;
+    text-align: left;
+    padding-left: 20px;
+}
+#sideMenu button:hover {
+    background: rgba(231, 76, 60, 0.7);
+    border-color: #e74c3c;
+    transform: translateX(6px);
+}
+.container {
+    max-width: 1000px;
+    margin: 60px auto 0;
+    background: rgba(25, 30, 45, 0.5);
+    backdrop-filter: blur(4px);
+    border-radius: 36px;
+    padding: 28px;
+}
+h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #fff, #e74c3c);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-align: center;
+    margin-bottom: 24px;
+}
+.school-selector {
+    margin-bottom: 24px;
+    text-align: center;
+}
+.school-selector select {
+    width: auto;
+    padding: 8px 16px;
+    background: #1e2438;
+    border: 1px solid #2a3348;
+    border-radius: 40px;
+    color: white;
+    font-size: 1rem;
+}
+.log-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+.log-table th, .log-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.log-table th {
+    background: rgba(231,76,60,0.2);
+    color: #e74c3c;
+    font-weight: 600;
+}
+.log-row {
+    cursor: pointer;
+    transition: 0.1s;
+}
+.log-row:hover {
+    background: rgba(255,255,255,0.05);
+}
+.amount-positive {
+    color: #2c5f2d;
+    font-weight: bold;
+}
+.amount-negative {
+    color: #e74c3c;
+    font-weight: bold;
+}
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 24px;
+}
+.pagination button {
+    background: #2c5f2d;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 40px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: white;
+}
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(8px);
+}
+.modal-content {
+    background: #121826;
+    margin: 10% auto;
+    padding: 28px;
+    border-radius: 32px;
+    width: 500px;
+    max-width: 90%;
+    border: 1px solid rgba(255,255,255,0.1);
+    font-size: 1rem;
+}
+.close {
+    float: right;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+/* ========== СТИЛИ АВТОРИЗАЦИИ ========== */
+.user-info {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(10, 15, 30, 0.65);
+    backdrop-filter: blur(12px);
+    padding: 6px 18px;
+    border-radius: 60px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+.user-info:hover {
+    border-color: rgba(231, 76, 60, 0.5);
+    background: rgba(10, 15, 30, 0.8);
+}
+#userNameDisplay {
+    background: rgba(0, 0, 0, 0.45);
+    padding: 6px 14px;
+    border-radius: 40px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #fff;
+    letter-spacing: 0.3px;
+    backdrop-filter: blur(4px);
+    white-space: nowrap;
+}
+.auth-buttons {
+    display: flex;
+    gap: 10px;
+}
+.auth-buttons button {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 7px 18px;
+    border-radius: 40px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: inherit;
+    color: #f0f0f0;
+    transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.auth-buttons button:hover {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    border-color: rgba(255, 255, 255, 0.7);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 18px rgba(231, 76, 60, 0.4);
+    color: white;
+}
+#logoutBtn {
+    background: rgba(192, 57, 43, 0.7);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+#logoutBtn:hover {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    transform: translateY(-2px);
+}
+/* ===================================== */
+
+select, button, input {
+    background: #1e2438;
+    border: 1px solid #2a3348;
+    border-radius: 40px;
+    padding: 8px 16px;
+    color: white;
+    margin: 5px 0;
+    width: 100%;
+    font-size: 1rem;
+}
+button {
+    background: #2c5f2d;
+    cursor: pointer;
+}
+
+@media (max-width: 700px) {
+    .log-table th, .log-table td { padding: 8px; font-size: 0.8rem; }
+    .container { padding: 16px; }
+    .user-info {
+        top: 12px;
+        right: 12px;
+        padding: 4px 12px;
+        gap: 8px;
+    }
+    .auth-buttons {
+        gap: 6px;
+    }
+    .auth-buttons button {
+        padding: 5px 12px;
+        font-size: 0.75rem;
+        gap: 4px;
+    }
+    #userNameDisplay {
+        padding: 4px 10px;
+        font-size: 0.75rem;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="user-info">
+    <span id="userNameDisplay" style="display: none;"></span>
+    <div class="auth-buttons">
+        <button id="loginBtn" style="display: none;">Войти</button>
+        <button id="registerBtn" style="display: none;">Регистрация</button>
+        <button id="logoutBtn" style="display: none;">Выйти</button>
+    </div>
+</div>
+
+<button id="openSidebarBtn">☰</button>
+<div id="sideMenu">
+    <ul>
+        <li><button id="schoolsBtn">🏫 Школы</button></li>
+        <li><button id="matchesBtn">📅 Матчи</button></li>
+        <li><button id="tanksBtn">🛸 Танки</button></li>
+        <li><button id="wheelBtn">🎡 Колесо</button></li>
+        <li><button id="importBtn">📦 Импорт</button></li>
+        <li><button id="logsBtn">📜 Логи</button></li>
+        <li><button id="mapBtn">🗺️ Карта GuP</button></li>
+        <li><button id="ratingBtn">📊 Рейтинг</button></li>
+        <li id="adminMenuItem" style="display: none;"><button id="adminBtn">👑 Админ-панель</button></li>
+    </ul>
+</div>
+
+<div class="container">
+    <h1>📜 Логи операций</h1>
+    <div class="school-selector">
+        <label>Выберите школу: </label>
+        <select id="schoolSelect"></select>
+    </div>
+    <div id="logMessage" style="text-align: center; padding: 20px; display: none;"></div>
+    <table class="log-table" id="logTable" style="display: none;">
+        <thead>
+            <tr><th>Дата</th><th>Сумма</th><th>Описание</th><th>Оператор</th></tr>
+        </thead>
+        <tbody id="logBody"></tbody>
+    </table>
+    <div id="pagination" class="pagination" style="display: none;"></div>
+</div>
+
+<!-- Модальное окно с деталями -->
+<div id="detailModal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="closeModal">&times;</span>
+        <h3>📋 Детали операции</h3>
+        <div id="detailContent"></div>
+    </div>
+</div>
+
+<script>
+const api = window.location.origin;
+
+async function authFetch(url, options = {}) {
+    const headers = { "Content-Type": "application/json", ...options.headers };
+    return fetch(url, { ...options, headers, credentials: 'include' });
+}
+
+let currentUser = null;
+let currentUserRoles = [];
+let currentUserIsAdmin = false;
+
+async function updateAuthUI() {
+    const userNameSpan = document.getElementById("userNameDisplay");
+    const loginBtn = document.getElementById("loginBtn");
+    const registerBtn = document.getElementById("registerBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const adminMenuItem = document.getElementById("adminMenuItem");
+
+    try {
+        const res = await authFetch(`${api}/me`);
+        if (res.ok) {
+            const user = await res.json();
+            currentUser = user;
+            currentUserRoles = user.roles || [];
+            currentUserIsAdmin = user.is_admin || false;
+            if (userNameSpan) {
+                userNameSpan.textContent = user.username;
+                userNameSpan.style.display = "inline-block";
+            }
+            if (loginBtn) loginBtn.style.display = "none";
+            if (registerBtn) registerBtn.style.display = "none";
+            if (logoutBtn) logoutBtn.style.display = "inline-flex";
+            if (adminMenuItem) adminMenuItem.style.display = currentUserIsAdmin ? "block" : "none";
+        } else {
+            currentUser = null;
+            currentUserRoles = [];
+            currentUserIsAdmin = false;
+            if (userNameSpan) userNameSpan.style.display = "none";
+            if (loginBtn) loginBtn.style.display = "inline-flex";
+            if (registerBtn) registerBtn.style.display = "inline-flex";
+            if (logoutBtn) logoutBtn.style.display = "none";
+            if (adminMenuItem) adminMenuItem.style.display = "none";
+        }
+    } catch (err) {
+        console.error(err);
+        currentUser = null;
+        currentUserRoles = [];
+        currentUserIsAdmin = false;
+        if (userNameSpan) userNameSpan.style.display = "none";
+        if (loginBtn) loginBtn.style.display = "inline-flex";
+        if (registerBtn) registerBtn.style.display = "inline-flex";
+        if (logoutBtn) logoutBtn.style.display = "none";
+        if (adminMenuItem) adminMenuItem.style.display = "none";
+    }
+}
+
+document.getElementById("loginBtn")?.addEventListener("click", () => {
+    window.location.href = "login.html";
+});
+document.getElementById("registerBtn")?.addEventListener("click", () => {
+    window.location.href = "register.html";
+});
+document.getElementById("logoutBtn").onclick = async () => {
+    await authFetch(`${api}/logout`, { method: "POST" });
+    updateAuthUI();
+    // Очищаем таблицу и скрываем её
+    document.getElementById("logBody").innerHTML = '';
+    document.getElementById("logTable").style.display = "none";
+    document.getElementById("pagination").style.display = "none";
+    document.getElementById("logMessage").style.display = "block";
+    document.getElementById("logMessage").innerHTML = "🔒 Для просмотра логов необходимо <a href='login.html'>войти</a>.";
+};
+
+// Сайдбар
+document.getElementById("openSidebarBtn").onclick = () => {
+    const sideMenu = document.getElementById("sideMenu");
+    sideMenu.style.display = sideMenu.style.display === "block" ? "none" : "block";
+};
+document.getElementById("schoolsBtn").onclick = () => { window.location.href = "index.html"; };
+document.getElementById("matchesBtn").onclick = () => { window.location.href = "matches.html"; };
+document.getElementById("tanksBtn").onclick = () => { window.location.href = "tanks.html"; };
+document.getElementById("wheelBtn").onclick = () => { window.location.href = "wheel.html"; };
+document.getElementById("importBtn").onclick = () => { window.location.href = "import.html"; };
+document.getElementById("adminBtn").onclick = () => { window.location.href = "admin.html"; };
+document.getElementById("logsBtn").onclick = () => { window.location.href = "logs.html"; };
+document.getElementById("ratingBtn").onclick = () => {window.location.href = "rating.html"; };
+document.getElementById("mapBtn").onclick = () => {window.location.href = "japan_map.html"; };
+
+let currentSchoolId = null;
+let currentPage = 1;
+let totalPages = 1;
+const limit = 50;
+
+async function loadSchools() {
+    try {
+        const res = await fetch(`${api}/schools/`);
+        const schools = await res.json();
+        const select = document.getElementById("schoolSelect");
+        select.innerHTML = '<option value="">-- Выберите школу --</option>';
+        schools.forEach(s => {
+            const option = document.createElement("option");
+            option.value = s.id;
+            option.textContent = s.name;
+            select.appendChild(option);
+        });
+        select.onchange = () => {
+            currentSchoolId = select.value ? parseInt(select.value) : null;
+            currentPage = 1;
+            if (currentSchoolId) {
+                if (!currentUser) {
+                    document.getElementById("logMessage").style.display = "block";
+                    document.getElementById("logMessage").innerHTML = "🔒 Для просмотра логов необходимо <a href='login.html'>войти</a>.";
+                    document.getElementById("logTable").style.display = "none";
+                    document.getElementById("pagination").style.display = "none";
+                    return;
+                }
+                loadLogs();
+            } else {
+                document.getElementById("logBody").innerHTML = '<td><td colspan="4">Выберите школу<\/td><\/tr>';
+                document.getElementById("logTable").style.display = "table";
+                document.getElementById("pagination").style.display = "none";
+                document.getElementById("logMessage").style.display = "none";
+            }
+        };
+    } catch (err) {
+        console.error("Ошибка загрузки школ:", err);
+    }
+}
+
+async function loadLogs() {
+    if (!currentSchoolId) return;
+    const msgDiv = document.getElementById("logMessage");
+    const table = document.getElementById("logTable");
+    const paginationDiv = document.getElementById("pagination");
+
+    msgDiv.style.display = "none";
+    table.style.display = "table";
+
+    const offset = (currentPage - 1) * limit;
+    const url = `${api}/logs/school/${currentSchoolId}?limit=${limit}&offset=${offset}`;
+    const res = await authFetch(url);
+    if (res.status === 403) {
+        document.getElementById("logBody").innerHTML = '<tr><td colspan="4">⛔ У вас нет прав на просмотр логов этой школы<\/td><\/tr>';
+        paginationDiv.style.display = "none";
+        return;
+    }
+    if (res.ok) {
+        const logs = await res.json();
+        renderLogs(logs);
+        if (logs.length < limit) totalPages = currentPage;
+        else totalPages = currentPage + 1;
+        renderPagination();
+        paginationDiv.style.display = "flex";
+    } else {
+        console.error("Ошибка загрузки логов");
+        document.getElementById("logBody").innerHTML = '<tr><td colspan="4">❌ Ошибка загрузки логов<\/td><\/tr>';
+        paginationDiv.style.display = "none";
+    }
+}
+
+function renderLogs(logs) {
+    const tbody = document.getElementById("logBody");
+    tbody.innerHTML = "";
+    if (logs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4">Нет операций<\/td><\/tr>';
+        return;
+    }
+    logs.forEach(log => {
+        const row = tbody.insertRow();
+        row.className = "log-row";
+        row.dataset.logId = log.id;
+        const dateCell = row.insertCell(0);
+        dateCell.textContent = new Date(log.created_at).toLocaleString();
+        const amountCell = row.insertCell(1);
+        amountCell.textContent = (log.amount > 0 ? "+" : "") + log.amount.toLocaleString();
+        amountCell.className = log.amount >= 0 ? "amount-positive" : "amount-negative";
+        const descCell = row.insertCell(2);
+        descCell.textContent = log.description;
+        const opCell = row.insertCell(3);
+        opCell.textContent = log.operator_name || "—";
+        row.onclick = () => showDetails(log);
+    });
+}
+
+function renderPagination() {
+    const div = document.getElementById("pagination");
+    div.innerHTML = "";
+    if (totalPages <= 1) return;
+    if (currentPage > 1) {
+        const prev = document.createElement("button");
+        prev.textContent = "← Назад";
+        prev.onclick = () => { currentPage--; loadLogs(); };
+        div.appendChild(prev);
+    }
+    const span = document.createElement("span");
+    span.textContent = `Страница ${currentPage}`;
+    div.appendChild(span);
+    if (currentPage < totalPages) {
+        const next = document.createElement("button");
+        next.textContent = "Вперед →";
+        next.onclick = () => { currentPage++; loadLogs(); };
+        div.appendChild(next);
+    }
+}
+
+function showDetails(log) {
+    const modal = document.getElementById("detailModal");
+    const content = document.getElementById("detailContent");
+    let html = `<p><strong>Сумма:</strong> ${log.amount > 0 ? "+" : ""}${log.amount.toLocaleString()}</p>`;
+    html += `<p><strong>Тип операции:</strong> ${log.operation_type}</p>`;
+    html += `<p><strong>Описание:</strong> ${log.description}</p>`;
+    html += `<p><strong>Дата:</strong> ${new Date(log.created_at).toLocaleString()}</p>`;
+    if (log.operator_name) html += `<p><strong>Оператор:</strong> ${log.operator_name}</p>`;
+    if (log.reference_type === "match" && log.extra_data) {
+        html += `<p><strong>Матч ID:</strong> ${log.extra_data.match_id}</p>`;
+        if (log.extra_data.teams) {
+            html += `<p><strong>Команды:</strong> ${log.extra_data.teams.team1.join(", ")} vs ${log.extra_data.teams.team2.join(", ")}</p>`;
+        }
+        if (log.extra_data.score) html += `<p><strong>Счёт:</strong> ${log.extra_data.score}</p>`;
+    }
+    content.innerHTML = html;
+    modal.style.display = "block";
+}
+
+document.getElementById("closeModal").onclick = () => {
+    document.getElementById("detailModal").style.display = "none";
+};
+window.onclick = e => {
+    if (e.target === document.getElementById("detailModal")) document.getElementById("detailModal").style.display = "none";
+};
+
+// Инициализация
+updateAuthUI().then(() => {
+    loadSchools();
+});
+</script>
+</body>
+</html>

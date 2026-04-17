@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Импорт | Girls und Panzer</title>
+<style>
+/* ... ваши стили (без изменений) ... */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    background: linear-gradient(135deg, #0a0f1e 0%, #0c1222 100%);
+    color: #eef4ff;
+    font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+    min-height: 100vh;
+    padding: 24px;
+}
+#openSidebarBtn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1100;
+    font-size: 26px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 40px;
+    transition: all 0.2s ease;
+}
+#openSidebarBtn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.02);
+}
+#sideMenu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 260px;
+    height: 100%;
+    background: rgba(20, 25, 40, 0.95);
+    backdrop-filter: blur(12px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 38px 16px;
+    display: none;
+    z-index: 1050;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+}
+#sideMenu ul {
+    list-style: none;
+    margin-top: 40px;
+}
+#sideMenu li {
+    margin: 24px 0;
+}
+#sideMenu button {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 12px;
+    border-radius: 32px;
+    color: white;
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.2s;
+    text-align: left;
+    padding-left: 20px;
+}
+#sideMenu button:hover {
+    background: rgba(231, 76, 60, 0.7);
+    border-color: #e74c3c;
+    transform: translateX(6px);
+}
+.container {
+    max-width: 1000px;
+    margin: 60px auto 0;
+    background: rgba(25, 30, 45, 0.5);
+    backdrop-filter: blur(4px);
+    border-radius: 36px;
+    padding: 28px;
+}
+h1 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 24px;
+    background: linear-gradient(135deg, #fff, #e74c3c);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+.imports-wrapper {
+    overflow-x: auto;
+    padding-bottom: 16px;
+}
+.imports-grid {
+    display: inline-flex;
+    gap: 24px;
+    padding: 8px;
+}
+.import-card {
+    background: rgba(25, 30, 45, 0.7);
+    backdrop-filter: blur(4px);
+    border-radius: 28px;
+    width: 380px;
+    white-space: normal;
+    display: inline-block;
+    vertical-align: top;
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: 0.2s;
+}
+.import-card:hover {
+    transform: translateY(-4px);
+    background: rgba(35, 40, 60, 0.8);
+}
+.import-header {
+    background: rgba(231,76,60,0.2);
+    padding: 16px;
+    border-radius: 28px 28px 0 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.import-date {
+    font-size: 1rem;
+    font-weight: bold;
+}
+.import-status {
+    font-size: 0.8rem;
+    margin-top: 6px;
+    color: #f1c40f;
+}
+.tank-list {
+    padding: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+.tank-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.tank-name {
+    font-size: 0.9rem;
+}
+.tank-price {
+    font-size: 0.85rem;
+    color: #f1c40f;
+}
+.apply-btn {
+    background: #2c5f2d;
+    border: none;
+    padding: 4px 12px;
+    border-radius: 40px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.apply-btn:disabled {
+    background: #555;
+    cursor: not-allowed;
+}
+.apply-btn:hover:not(:disabled) {
+    background: #1e3a1e;
+}
+.winner-badge {
+    background: #e67e22;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    margin-left: 8px;
+}
+.no-imports {
+    text-align: center;
+    padding: 40px;
+    color: #aaa;
+}
+.user-info {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(10, 15, 30, 0.65);
+    backdrop-filter: blur(12px);
+    padding: 6px 18px;
+    border-radius: 60px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+.user-info:hover {
+    border-color: rgba(231, 76, 60, 0.5);
+    background: rgba(10, 15, 30, 0.8);
+}
+#userNameDisplay {
+    background: rgba(0, 0, 0, 0.45);
+    padding: 6px 14px;
+    border-radius: 40px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #fff;
+    letter-spacing: 0.3px;
+    backdrop-filter: blur(4px);
+    white-space: nowrap;
+}
+.auth-buttons {
+    display: flex;
+    gap: 10px;
+}
+.auth-buttons button {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 7px 18px;
+    border-radius: 40px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: inherit;
+    color: #f0f0f0;
+    transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.auth-buttons button:hover {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    border-color: rgba(255, 255, 255, 0.7);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 18px rgba(231, 76, 60, 0.4);
+    color: white;
+}
+#logoutBtn {
+    background: rgba(192, 57, 43, 0.7);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+#logoutBtn:hover {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    transform: translateY(-2px);
+}
+@media (max-width: 700px) {
+    .import-card { width: 320px; }
+    .user-info {
+        top: 12px;
+        right: 12px;
+        padding: 4px 12px;
+        gap: 8px;
+    }
+    .auth-buttons {
+        gap: 6px;
+    }
+    .auth-buttons button {
+        padding: 5px 12px;
+        font-size: 0.75rem;
+        gap: 4px;
+    }
+    #userNameDisplay {
+        padding: 4px 10px;
+        font-size: 0.75rem;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="user-info">
+    <span id="userNameDisplay" style="display: none;"></span>
+    <div class="auth-buttons">
+        <button id="loginBtn" style="display: none;">Войти</button>
+        <button id="registerBtn" style="display: none;">Регистрация</button>
+        <button id="logoutBtn" style="display: none;">Выйти</button>
+    </div>
+</div>
+
+<button id="openSidebarBtn">☰</button>
+<div id="sideMenu">
+    <ul>
+        <li><button id="schoolsBtn">🏫 Школы</button></li>
+        <li><button id="matchesBtn">📅 Матчи</button></li>
+        <li><button id="tanksBtn">🛸 Танки</button></li>
+        <li><button id="wheelBtn">🎡 Колесо</button></li>
+        <li><button id="importBtn">📦 Импорт</button></li>
+        <li><button id="logsBtn">📜 Логи</button></li>
+        <li><button id="mapBtn">🗺️ Карта GuP</button></li>
+        <li><button id="ratingBtn">📊 Рейтинг</button></li>
+        <li id="adminMenuItem" style="display: none;"><button id="adminBtn">👑 Админ-панель</button></li>
+    </ul>
+</div>
+
+<div class="container">
+    <h1>📦 Импорт техники</h1>
+    <div class="imports-wrapper">
+        <div id="importsGrid" class="imports-grid"></div>
+    </div>
+</div>
+
+<script>
+const api = window.location.origin;
+
+async function authFetch(url, options = {}) {
+    const headers = { "Content-Type": "application/json", ...options.headers };
+    return fetch(url, { ...options, headers, credentials: 'include' });
+}
+
+let currentUser = null;
+let currentUserRoles = [];
+let currentUserIsAdmin = false;
+
+async function updateAuthUI() {
+    const userNameSpan = document.getElementById("userNameDisplay");
+    const loginBtn = document.getElementById("loginBtn");
+    const registerBtn = document.getElementById("registerBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const adminMenuItem = document.getElementById("adminMenuItem");
+
+    try {
+        const res = await authFetch(`${api}/me`);
+        if (res.ok) {
+            const user = await res.json();
+            currentUser = user;
+            currentUserRoles = user.roles || [];
+            currentUserIsAdmin = user.is_admin || false;
+            if (userNameSpan) {
+                userNameSpan.textContent = user.username;
+                userNameSpan.style.display = "inline-block";
+            }
+            if (loginBtn) loginBtn.style.display = "none";
+            if (registerBtn) registerBtn.style.display = "none";
+            if (logoutBtn) logoutBtn.style.display = "inline-flex";
+            if (adminMenuItem) adminMenuItem.style.display = currentUserIsAdmin ? "block" : "none";
+        } else {
+            currentUser = null;
+            currentUserRoles = [];
+            currentUserIsAdmin = false;
+            if (userNameSpan) userNameSpan.style.display = "none";
+            if (loginBtn) loginBtn.style.display = "inline-flex";
+            if (registerBtn) registerBtn.style.display = "inline-flex";
+            if (logoutBtn) logoutBtn.style.display = "none";
+            if (adminMenuItem) adminMenuItem.style.display = "none";
+        }
+    } catch (err) {
+        console.error(err);
+        currentUser = null;
+        currentUserRoles = [];
+        currentUserIsAdmin = false;
+        if (userNameSpan) userNameSpan.style.display = "none";
+        if (loginBtn) loginBtn.style.display = "inline-flex";
+        if (registerBtn) registerBtn.style.display = "inline-flex";
+        if (logoutBtn) logoutBtn.style.display = "none";
+        if (adminMenuItem) adminMenuItem.style.display = "none";
+    }
+}
+
+document.getElementById("loginBtn")?.addEventListener("click", () => {
+    window.location.href = "login.html";
+});
+document.getElementById("registerBtn")?.addEventListener("click", () => {
+    window.location.href = "register.html";
+});
+document.getElementById("logoutBtn").onclick = async () => {
+    await authFetch(`${api}/logout`, { method: "POST" });
+    await updateAuthUI();
+    loadImports();
+};
+
+// Сайдбар
+document.getElementById("openSidebarBtn").onclick = () => {
+    const sideMenu = document.getElementById("sideMenu");
+    sideMenu.style.display = sideMenu.style.display === "block" ? "none" : "block";
+};
+document.getElementById("schoolsBtn").onclick = () => { window.location.href = "index.html"; };
+document.getElementById("matchesBtn").onclick = () => { window.location.href = "matches.html"; };
+document.getElementById("tanksBtn").onclick = () => { window.location.href = "tanks.html"; };
+document.getElementById("wheelBtn").onclick = () => { window.location.href = "wheel.html"; };
+document.getElementById("importBtn").onclick = () => { window.location.href = "import.html"; };
+document.getElementById("adminBtn").onclick = () => { window.location.href = "admin.html"; };
+document.getElementById("logsBtn").onclick = () => { window.location.href = "logs.html"; };
+document.getElementById("ratingBtn").onclick = () => {window.location.href = "rating.html"; };
+document.getElementById("mapBtn").onclick = () => {window.location.href = "japan_map.html"; };
+
+let allImports = [];
+
+async function loadImports() {
+    try {
+        const res = await fetch(`${api}/import/list`);
+        const data = await res.json();
+        allImports = data;
+        renderImports();
+    } catch (err) {
+        console.error(err);
+        document.getElementById("importsGrid").innerHTML = '<div class="no-imports">Ошибка загрузки импортов</div>';
+    }
+}
+
+function renderImports() {
+    const grid = document.getElementById("importsGrid");
+    const now = new Date();
+    const visibleImports = allImports.filter(imp => {
+        const displayDate = new Date(imp.display_date);
+        return displayDate <= now;
+    });
+    if (!visibleImports.length) {
+        grid.innerHTML = '<div class="no-imports">Нет активных импортов</div>';
+        return;
+    }
+    grid.innerHTML = "";
+    const userHasRole = currentUser && (currentUserIsAdmin || currentUserRoles.some(r => r.role === "commander" || r.role === "deputy"));
+    visibleImports.forEach(imp => {
+        const startDate = new Date(imp.start_date);
+        const endDate = new Date(imp.end_date);
+        const nowDate = new Date();
+        const canApply = userHasRole && nowDate >= startDate && nowDate <= endDate;
+        const isExpired = nowDate > endDate;
+        const isDrawn = imp.is_drawn;
+
+        const card = document.createElement("div");
+        card.className = "import-card";
+        card.innerHTML = `
+            <div class="import-header">
+                <div class="import-date">🗓️ Импорт от ${new Date(imp.display_date).toLocaleDateString()}</div>
+                <div class="import-status">⏰ Заявки: ${startDate.toLocaleDateString()} ${startDate.toLocaleTimeString()} – ${endDate.toLocaleDateString()} ${endDate.toLocaleTimeString()}</div>
+                <div class="import-status">${isDrawn ? "🏆 Розыгрыш проведён" : (isExpired ? "🔒 Заявки закрыты" : (canApply ? "🟢 Приём заявок открыт" : "🔴 Приём заявок закрыт"))}</div>
+            </div>
+            <div class="tank-list">
+                ${imp.tanks.map(t => `
+                    <div class="tank-item">
+                        <div>
+                            <div class="tank-name">${t.tank_name}</div>
+                            <div class="tank-price">💰 ${t.price}</div>
+                            ${t.winner_school ? `<div class="winner-badge">🏆 Победитель: ${t.winner_school}</div>` : ""}
+                        </div>
+                        ${!t.winner_school && !isDrawn && canApply ?
+                            (t.applied_by_my_school ?
+                                `<button class="apply-btn" disabled style="background: #555;">✅ Заявка подана</button>` :
+                                `<button class="apply-btn" data-import-id="${imp.id}" data-tank-import-id="${t.id}">📝 Заявка</button>`
+                            ) :
+                            (t.winner_school ? `<span>✅</span>` : (isDrawn ? `<span>❌</span>` : `<span>🔒</span>`))}
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+
+    document.querySelectorAll('.apply-btn:not(:disabled)').forEach(btn => {
+        btn.onclick = async () => {
+            const tankImportId = parseInt(btn.dataset.tankImportId);
+            if (!currentUser) {
+                alert("Для подачи заявки необходимо войти в систему.");
+                return;
+            }
+            try {
+                const res = await authFetch(`${api}/import/apply`, {
+                    method: "POST",
+                    body: JSON.stringify({ tank_import_id: tankImportId })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert("Заявка подана!");
+                    btn.disabled = true;
+                    btn.textContent = "✅ Заявка подана";
+                    btn.style.background = "#555";
+                } else {
+                    alert("Ошибка: " + (data.detail || "Неизвестная ошибка"));
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Ошибка соединения с сервером");
+            }
+        };
+    });
+}
+
+updateAuthUI().then(() => {
+    loadImports();
+});
+</script>
+</body>
+</html>
