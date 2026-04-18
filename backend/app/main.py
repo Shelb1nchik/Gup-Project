@@ -13,7 +13,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.date import DateTrigger
 from dotenv import load_dotenv
 from app.data.upgrades import upgrade_tree
-from app.auth import get_current_user, create_access_token, verify_password, get_password_hash, ACCESS_TOKEN_EXPIRE_MINUTES
+from app.auth import get_current_user, create_access_token, verify_password, get_password_hash, ACCESS_TOKEN_EXPIRE_MINUTES, decode_access_token
 from random import sample
 import shutil
 from datetime import datetime
@@ -273,7 +273,17 @@ def get_db():
 @app.get("/schools/")
 def get_schools(db: Session = Depends(get_db)):
     schools = db.query(School).all()
-    return [{"id": s.id, "name": s.name, "balance": s.balance, "rating": s.rating, "wins": s.wins, "losses": s.losses} for s in schools]
+    return [{
+        "id": s.id,
+        "name": s.name,
+        "balance": s.balance,
+        "rating": s.rating,
+        "wins": s.wins,
+        "losses": s.losses,
+        "win_streak": s.current_streak,      # для фронтенда
+        "current_streak": s.current_streak,  # для обратной совместимости
+        "max_streak": s.max_streak
+    } for s in schools]
 
 @app.get("/schools/{school_id}")
 def get_school(school_id: int, db: Session = Depends(get_db)):
@@ -326,11 +336,25 @@ def get_manufacturer(school_id: int, db: Session = Depends(get_db)):
         } for mt in school.manufacturer_tanks
     ]
 
+
 @app.post("/buy/")
-def buy_tanks(request: BuyRequest, db: Session = Depends(get_db)):
+def buy_tanks(
+        request: BuyRequest,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+):
     school = db.get(School, request.school_id)
     if not school:
         raise HTTPException(404, "School not found")
+
+    # Проверка прав: админ, командир или зам этой школы
+    has_right = current_user.is_admin or any(
+        r.school_id == request.school_id and r.role in ["commander", "deputy"]
+        for r in current_user.roles
+    )
+    if not has_right:
+        raise HTTPException(403, "Недостаточно прав для покупки танков для этой школы")
+
     total_cost = 0
     items_to_buy = []
     for item in request.items:
@@ -348,20 +372,27 @@ def buy_tanks(request: BuyRequest, db: Session = Depends(get_db)):
             existing.quantity += qty
         else:
             db.add(SchoolTank(school_id=school.id, tank_id=tank.id, quantity=qty))
-    # Лог покупки
+
+    # Лог с оператором
     create_transaction_log(
         db=db,
         school_id=school.id,
         amount=-total_cost,
         operation_type="tank_purchase",
-        description=f"Покупка {len(items_to_buy)} танков",
-        extra_data={"items": [{"tank_id": t.id, "quantity": qty} for t, qty in items_to_buy]}
+        description=f"Покупка {sum(item.quantity for item in request.items)} танков",
+        extra_data={"items": [{"tank_id": t.id, "quantity": qty} for t, qty in items_to_buy]},
+        operator_user_id=current_user.id
     )
     db.commit()
     return {"message": "Purchase successful"}
 
+
 @app.post("/transfer/")
-def transfer_money(request: TransferRequest, db: Session = Depends(get_db)):
+def transfer_money(
+        request: TransferRequest,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+):
     from_school = db.get(School, request.from_school_id)
     to_school = db.get(School, request.to_school_id)
     if not from_school or not to_school:
@@ -375,7 +406,7 @@ def transfer_money(request: TransferRequest, db: Session = Depends(get_db)):
     received_amount = int(request.amount * (1 - TAX))
     from_school.balance -= request.amount
     to_school.balance += received_amount
-    # Логи перевода
+
     create_transaction_log(
         db=db,
         school_id=from_school.id,
@@ -384,7 +415,8 @@ def transfer_money(request: TransferRequest, db: Session = Depends(get_db)):
         description=f"Перевод в школу {to_school.name}",
         reference_id=to_school.id,
         reference_type="school",
-        extra_data={"to_school_id": to_school.id, "tax": TAX, "received": received_amount}
+        extra_data={"to_school_id": to_school.id, "tax": TAX, "received": received_amount},
+        operator_user_id=current_user.id
     )
     create_transaction_log(
         db=db,
@@ -394,7 +426,8 @@ def transfer_money(request: TransferRequest, db: Session = Depends(get_db)):
         description=f"Перевод от школы {from_school.name}",
         reference_id=from_school.id,
         reference_type="school",
-        extra_data={"from_school_id": from_school.id, "tax": TAX, "sent": request.amount}
+        extra_data={"from_school_id": from_school.id, "tax": TAX, "sent": request.amount},
+        operator_user_id=current_user.id
     )
     db.commit()
     return {
@@ -1030,14 +1063,29 @@ def get_tank_upgrades(tank_id: int, db: Session = Depends(get_db)):
             })
     return result
 
+
 @app.post("/schools/{school_id}/sell_tank")
-def sell_tank(school_id: int, req: dict, db: Session = Depends(get_db)):
+def sell_tank(
+        school_id: int,
+        req: dict,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+):
     tank_id = req.get("tank_id")
     if not tank_id:
         raise HTTPException(400, "Не указан tank_id")
     school = db.get(School, school_id)
     if not school:
         raise HTTPException(404, "Школа не найдена")
+
+    # Проверка прав
+    has_right = current_user.is_admin or any(
+        r.school_id == school_id and r.role in ["commander", "deputy"]
+        for r in current_user.roles
+    )
+    if not has_right:
+        raise HTTPException(403, "Недостаточно прав")
+
     school_tank = db.query(SchoolTank).filter(
         SchoolTank.school_id == school_id,
         SchoolTank.tank_id == tank_id
@@ -1059,20 +1107,38 @@ def sell_tank(school_id: int, req: dict, db: Session = Depends(get_db)):
         amount=sell_price,
         operation_type="tank_sale",
         description=f"Продажа {tank.name}",
-        extra_data={"tank_id": tank.id, "tank_name": tank.name}
+        extra_data={"tank_id": tank.id, "tank_name": tank.name},
+        operator_user_id=current_user.id
     )
     db.commit()
     return {"ok": True, "new_balance": school.balance, "sold_price": sell_price}
 
+
 @app.post("/schools/{school_id}/upgrade_tank")
-def upgrade_tank(school_id: int, req: dict, db: Session = Depends(get_db)):
+def upgrade_tank(
+        school_id: int,
+        req: dict,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+):
     from_tank_id = req.get("from_tank_id")
     to_tank_id = req.get("to_tank_id")
     if not from_tank_id or not to_tank_id:
         raise HTTPException(400, "Не указаны tank_id")
+
     from_tank = db.get(Tank, from_tank_id)
     if not from_tank:
         raise HTTPException(404, "Исходный танк не найден")
+
+    # Проверка прав: админ, командир или зам этой школы
+    has_right = current_user.is_admin or any(
+        r.school_id == school_id and r.role in ["commander", "deputy"]
+        for r in current_user.roles
+    )
+    if not has_right:
+        raise HTTPException(403, "Недостаточно прав для улучшения танка для этой школы")
+
+    # Построение графа улучшений (как в вашем коде)
     all_upgrades = db.query(TankUpgrade).all()
     tank_prices = {t.id: t.price for t in db.query(Tank).all()}
     graph = {}
@@ -1082,6 +1148,7 @@ def upgrade_tank(school_id: int, req: dict, db: Session = Depends(get_db)):
         diff = abs(tank_prices.get(f_id, 0) - tank_prices.get(t_id, 0))
         weight = diff if up.is_direct else diff // 2
         graph.setdefault(f_id, {})[t_id] = weight
+
     import heapq
     distances = {node: float('inf') for node in graph}
     distances[from_tank_id] = 0
@@ -1095,25 +1162,31 @@ def upgrade_tank(school_id: int, req: dict, db: Session = Depends(get_db)):
             if new_dist < distances[neighbor]:
                 distances[neighbor] = new_dist
                 heapq.heappush(pq, (new_dist, neighbor))
+
     cost = distances.get(to_tank_id)
     if cost is None or cost == float('inf'):
         raise HTTPException(400, "Невозможно улучшить танк (нет пути)")
+
     school = db.get(School, school_id)
     if not school:
         raise HTTPException(404, "Школа не найдена")
+
     school_tank = db.query(SchoolTank).filter(
         SchoolTank.school_id == school_id,
         SchoolTank.tank_id == from_tank_id
     ).first()
     if not school_tank or school_tank.quantity < 1:
         raise HTTPException(400, "У школы нет такого танка для улучшения")
+
     if school.balance < cost:
         raise HTTPException(400, f"Недостаточно средств. Нужно {cost}, доступно {school.balance}")
+
     school.balance -= cost
     if school_tank.quantity > 1:
         school_tank.quantity -= 1
     else:
         db.delete(school_tank)
+
     target_tank = db.query(SchoolTank).filter(
         SchoolTank.school_id == school_id,
         SchoolTank.tank_id == to_tank_id
@@ -1122,14 +1195,18 @@ def upgrade_tank(school_id: int, req: dict, db: Session = Depends(get_db)):
         target_tank.quantity += 1
     else:
         db.add(SchoolTank(school_id=school_id, tank_id=to_tank_id, quantity=1))
+
+    # Лог с указанием оператора
     create_transaction_log(
         db=db,
         school_id=school.id,
         amount=-cost,
         operation_type="tank_upgrade",
-        description=f"Улучшение {from_tank.name} → {target_tank.tank.name if target_tank else db.get(Tank, to_tank_id).name}",
-        extra_data={"from_tank_id": from_tank_id, "to_tank_id": to_tank_id}
+        description=f"Улучшение {from_tank.name} → {db.get(Tank, to_tank_id).name}",
+        extra_data={"from_tank_id": from_tank_id, "to_tank_id": to_tank_id},
+        operator_user_id=current_user.id
     )
+
     db.commit()
     return {"ok": True, "new_balance": school.balance, "cost": cost}
 
@@ -1319,6 +1396,7 @@ def run_import_draw(event_id: int):
                     description=f"Покупка танка {it.tank.name} через импорт (авто)",
                     reference_id=event.id,
                     reference_type="import",
+                    operator_user_id=winner.user_id,  # <-- добавлено
                     extra_data={"tank_id": it.tank_id, "tank_name": it.tank.name}
                 )
                 print(f"[IMPORT DRAW] Школе {school.name} списано {it.price} за танк {it.tank.name}")
@@ -1477,6 +1555,12 @@ def update_import(
         raise HTTPException(404, "Импорт не найден")
     if event.is_drawn:
         raise HTTPException(400, "Нельзя редактировать уже разыгранный импорт")
+
+    # Запрещаем редактирование, если приём заявок уже начался
+    now_utc = datetime.utcnow()
+    if event.start_date <= now_utc:
+        raise HTTPException(400, "Редактирование невозможно: приём заявок уже начался")
+
     try:
         display_naive = datetime.fromisoformat(req["display_date"])
         start_naive = datetime.fromisoformat(req["start_date"])
@@ -1488,12 +1572,28 @@ def update_import(
         raise HTTPException(400, "Неверный формат даты")
     if display >= start or start >= end:
         raise HTTPException(400, "Даты должны идти по порядку: отображение < начало заявок < окончание заявок")
+
     event.display_date = display.astimezone(pytz.UTC)
     event.start_date = start.astimezone(pytz.UTC)
     event.end_date = end.astimezone(pytz.UTC)
     event.min_br = req.get("min_br", event.min_br)
     event.max_br = req.get("max_br", event.max_br)
-    event.tanks_count = req.get("tanks_count", event.tanks_count)
+    new_tanks_count = req.get("tanks_count", event.tanks_count)
+
+    # Если количество танков изменилось, перегенерируем список
+    if new_tanks_count != event.tanks_count:
+        # Удаляем старые танки импорта (и связанные заявки)
+        db.query(ImportApplication).filter(ImportApplication.event_id == event.id).delete()
+        db.query(ImportTank).filter(ImportTank.event_id == event.id).delete()
+        # Выбираем новые танки
+        tanks = db.query(Tank).filter(Tank.br >= event.min_br, Tank.br <= event.max_br).all()
+        if len(tanks) < new_tanks_count:
+            raise HTTPException(400, f"Недостаточно танков в диапазоне BR [{event.min_br}, {event.max_br}]")
+        selected = sample(tanks, new_tanks_count)
+        for tank in selected:
+            db.add(ImportTank(event_id=event.id, tank_id=tank.id, price=int(tank.price * 1.3)))
+        event.tanks_count = new_tanks_count
+
     db.commit()
     # Перепланируем розыгрыш
     if event.is_active and not event.is_drawn:
@@ -1523,23 +1623,50 @@ def draw_import(event_id: int, db: Session = Depends(get_db), current_user: User
 
 # ---------- ПУБЛИЧНЫЙ: СПИСОК ВСЕХ ИМПОРТОВ ----------
 @app.get("/import/list")
-def get_imports_list(db: Session = Depends(get_db)):
+def get_imports_list(request: Request, db: Session = Depends(get_db)):
+    # Определяем school_id текущего пользователя (если авторизован)
+    my_school_id = None
+    token = request.cookies.get("access_token")
+    if token:
+        payload = decode_access_token(token)
+        if payload:
+            user_id = payload.get("user_id")
+            if user_id:
+                user = db.query(User).filter(User.id == user_id).first()
+                if user and user.roles:
+                    # Берём первую школу (аналогично /import/apply)
+                    my_school_id = user.roles[0].school_id
+
     events = db.query(ImportEvent).order_by(ImportEvent.start_date.desc()).all()
     result = []
     for e in events:
+        # Преобразование дат (как было)
         display_utc = pytz.UTC.localize(e.display_date)
         start_utc = pytz.UTC.localize(e.start_date)
         end_utc = pytz.UTC.localize(e.end_date)
+
         tanks = db.query(ImportTank).filter(ImportTank.event_id == e.id).all()
         tank_list = []
         for t in tanks:
             winner = db.get(School, t.winner_school_id) if t.winner_school_id else None
+
+            # Проверка, подавала ли моя школа заявку на этот танк
+            applied = False
+            if my_school_id:
+                app_exists = db.query(ImportApplication).filter(
+                    ImportApplication.event_id == e.id,
+                    ImportApplication.school_id == my_school_id,
+                    ImportApplication.tank_id == t.tank_id
+                ).first() is not None
+                applied = app_exists
+
             tank_list.append({
                 "id": t.id,
                 "tank_id": t.tank_id,
                 "tank_name": t.tank.name,
                 "price": t.price,
-                "winner_school": winner.name if winner else None
+                "winner_school": winner.name if winner else None,
+                "applied_by_my_school": applied   # <-- добавляем поле
             })
         result.append({
             "id": e.id,
@@ -1582,7 +1709,7 @@ def apply_for_import_tank(req: dict, db: Session = Depends(get_db), current_user
     school = db.get(School, school_id)
     if not school or school.balance < import_tank.price:
         raise HTTPException(400, f"Недостаточно средств. Нужно {import_tank.price}, доступно {school.balance if school else 0}")
-    application = ImportApplication(event_id=event.id, school_id=school_id, tank_id=import_tank.tank_id)
+    application = ImportApplication(event_id=event.id, school_id=school_id, tank_id=import_tank.tank_id, user_id=current_user.id)
     db.add(application)
     db.commit()
     return {"ok": True, "message": "Заявка подана"}
@@ -2082,7 +2209,7 @@ def update_ratings_for_match(match: Match, result: MatchResult, db: Session):
 
         expected = expected_score(school.rating, rating_opp, school_br[school.id], br_opp)
 
-        # Вес внутри команды (чем слабее школа в команде, тем больше получает при победе)
+        # Вес внутри команды
         teammates = team1_schools if school in team1_schools else team2_schools
         if len(teammates) > 1:
             mates_ratings = [s.rating for s in teammates]
@@ -2097,9 +2224,59 @@ def update_ratings_for_match(match: Match, result: MatchResult, db: Session):
 
         delta = K * (real - expected) * mult * weight
         school.rating += delta
+
+        # Обновление статистики побед/поражений и серий
         if real == 1:
             school.wins += 1
+            school.current_streak += 1
+            if school.current_streak > school.max_streak:
+                school.max_streak = school.current_streak
         else:
             school.losses += 1
+            school.current_streak = 0
+
         db.add(school)
     db.commit()
+
+
+@app.delete("/import/apply/{tank_import_id}")
+def cancel_import_application(
+        tank_import_id: int,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+):
+    # Проверяем права
+    if not current_user.roles:
+        raise HTTPException(403, "У вас нет прав на отзыв заявки")
+    school_id = current_user.roles[0].school_id
+
+    # Находим танк в импорте
+    import_tank = db.query(ImportTank).filter(ImportTank.id == tank_import_id).first()
+    if not import_tank:
+        raise HTTPException(404, "Танк в импорте не найден")
+
+    event = import_tank.event
+    # Импорт должен быть активен и ещё не разыгран
+    if not event.is_active or event.is_drawn:
+        raise HTTPException(400, "Импорт уже завершён или разыгран, отзыв невозможен")
+
+    # Проверяем, что приём заявок ещё идёт
+    now_utc = datetime.now(pytz.UTC)
+    start_utc = pytz.UTC.localize(event.start_date)
+    end_utc = pytz.UTC.localize(event.end_date)
+    if now_utc < start_utc or now_utc > end_utc:
+        raise HTTPException(400, "Время приёма заявок уже вышло или ещё не началось")
+
+    # Находим заявку этой школы на этот танк
+    application = db.query(ImportApplication).filter(
+        ImportApplication.event_id == event.id,
+        ImportApplication.school_id == school_id,
+        ImportApplication.tank_id == import_tank.tank_id
+    ).first()
+    if not application:
+        raise HTTPException(404, "Заявка не найдена")
+
+    # Удаляем заявку
+    db.delete(application)
+    db.commit()
+    return {"ok": True, "message": "Заявка отозвана"}

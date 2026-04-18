@@ -42,6 +42,8 @@ class School(Base):
     rating = Column(Integer, default=1500, nullable=False)
     wins = Column(Integer, default=0, nullable=False)
     losses = Column(Integer, default=0, nullable=False)
+    current_streak = Column(Integer, default=0)  # текущая серия побед
+    max_streak = Column(Integer, default=0)
 
 
 # ------------------------ Танки ------------------------
@@ -146,7 +148,6 @@ class TankUpgrade(Base):
     is_direct = Column(Boolean, default=True)
 
 
-
 class ImportEvent(Base):
     __tablename__ = "import_events"
     id = Column(Integer, primary_key=True)
@@ -177,15 +178,17 @@ class ImportTank(Base):
 
 class ImportApplication(Base):
     __tablename__ = "import_applications"
-    id = Column(Integer, primary_key=True)
-    event_id = Column(Integer, ForeignKey("import_events.id"), nullable=False)
-    school_id = Column(Integer, ForeignKey("schools.id"), nullable=False)
-    tank_id = Column(Integer, ForeignKey("tanks.id"), nullable=False)
-    applied_at = Column(DateTime, default=datetime.utcnow)
+    id = Column(Integer, primary_key=True, index=True)
+    event_id = Column(Integer, ForeignKey("import_events.id"))
+    school_id = Column(Integer, ForeignKey("schools.id"))
+    tank_id = Column(Integer, ForeignKey("tanks.id"))
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    applied_at = Column(DateTime, default=datetime.utcnow)   # вместо created_at
 
     event = relationship("ImportEvent", back_populates="applications")
     school = relationship("School")
     tank = relationship("Tank")
+    user = relationship("User")
 
 class SchoolTransactionLog(Base):
     __tablename__ = "school_transaction_logs"

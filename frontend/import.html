@@ -36,6 +36,19 @@ body {
     border-radius: 40px;
     transition: all 0.2s ease;
 }
+.cancel-btn {
+    background: #c0392b;
+    border: none;
+    padding: 4px 12px;
+    border-radius: 40px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.cancel-btn:hover {
+    background: #a8231a;
+    transform: scale(1.02);
+}
 #openSidebarBtn:hover {
     background: rgba(255, 255, 255, 0.25);
     transform: scale(1.02);
@@ -444,7 +457,10 @@ function renderImports() {
                         </div>
                         ${!t.winner_school && !isDrawn && canApply ?
                             (t.applied_by_my_school ?
-                                `<button class="apply-btn" disabled style="background: #555;">✅ Заявка подана</button>` :
+                                `<div style="display: flex; gap: 8px;">
+                                    <button class="apply-btn" disabled style="background: #555;">✅ Заявка подана</button>
+                                    <button class="cancel-btn" data-tank-import-id="${t.id}" style="background: #c0392b; padding: 4px 12px; border-radius: 40px; font-size: 0.75rem; cursor: pointer;">❌ Отозвать</button>
+                                </div>` :
                                 `<button class="apply-btn" data-import-id="${imp.id}" data-tank-import-id="${t.id}">📝 Заявка</button>`
                             ) :
                             (t.winner_school ? `<span>✅</span>` : (isDrawn ? `<span>❌</span>` : `<span>🔒</span>`))}
@@ -473,6 +489,34 @@ function renderImports() {
                     btn.disabled = true;
                     btn.textContent = "✅ Заявка подана";
                     btn.style.background = "#555";
+                    loadImports(); // перезагружаем, чтобы показать кнопку отзыва
+                } else {
+                    alert("Ошибка: " + (data.detail || "Неизвестная ошибка"));
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Ошибка соединения с сервером");
+            }
+        };
+    });
+
+    document.querySelectorAll('.cancel-btn').forEach(btn => {
+        btn.onclick = async (e) => {
+            e.stopPropagation();
+            const tankImportId = parseInt(btn.dataset.tankImportId);
+            if (!currentUser) {
+                alert("Для отзыва заявки необходимо войти.");
+                return;
+            }
+            if (!confirm("Отозвать заявку? Вы сможете подать её снова.")) return;
+            try {
+                const res = await authFetch(`${api}/import/apply/${tankImportId}`, {
+                    method: "DELETE"
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert("Заявка отозвана");
+                    loadImports(); // перезагружаем список
                 } else {
                     alert("Ошибка: " + (data.detail || "Неизвестная ошибка"));
                 }
@@ -483,6 +527,33 @@ function renderImports() {
         };
     });
 }
+
+document.querySelectorAll('.cancel-btn').forEach(btn => {
+    btn.onclick = async (e) => {
+        e.stopPropagation();
+        const tankImportId = parseInt(btn.dataset.tankImportId);
+        if (!currentUser) {
+            alert("Для отзыва заявки необходимо войти.");
+            return;
+        }
+        if (!confirm("Отозвать заявку? Вы сможете подать её снова.")) return;
+        try {
+            const res = await authFetch(`${api}/import/apply/${tankImportId}`, {
+                method: "DELETE"
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert("Заявка отозвана");
+                loadImports(); // перезагружаем список
+            } else {
+                alert("Ошибка: " + (data.detail || "Неизвестная ошибка"));
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Ошибка соединения с сервером");
+        }
+    };
+});
 
 updateAuthUI().then(() => {
     loadImports();
