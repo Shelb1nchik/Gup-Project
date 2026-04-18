@@ -80,7 +80,7 @@ body {
     transform: translateX(6px);
 }
 .container {
-    max-width: 1000px;
+    max-width: 1300px;
     margin: 60px auto 0;
     background: rgba(25, 30, 45, 0.5);
     backdrop-filter: blur(4px);
@@ -187,6 +187,11 @@ th, td {
 }
 th {
     background: rgba(0,0,0,0.3);
+    cursor: pointer;
+    user-select: none;
+}
+th:hover {
+    background: rgba(231,76,60,0.2);
 }
 td button {
     padding: 4px 8px;
@@ -236,6 +241,7 @@ td button {
     gap: 16px;
     margin-bottom: 20px;
     justify-content: center;
+    flex-wrap: wrap;
 }
 .section-header button {
     width: auto;
@@ -334,6 +340,58 @@ td button {
     padding: 8px;
     border-radius: 16px;
 }
+.tanks-admin-table input {
+    width: 90%;
+    margin: 0;
+    padding: 4px;
+}
+/* Дополнительные стили для фильтров и таблиц производителей */
+.filter-bar {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    align-items: flex-end;
+}
+.filter-item {
+    flex: 1;
+    min-width: 120px;
+}
+.filter-item label {
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+    display: block;
+}
+.manufacturer-tables {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+.manufacturer-table-container {
+    flex: 1;
+    min-width: 300px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 24px;
+    padding: 16px;
+}
+.manufacturer-table-container h3 {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 16px;
+}
+.manufacturer-table {
+    width: 100%;
+    font-size: 0.8rem;
+}
+.manufacturer-table th, .manufacturer-table td {
+    padding: 6px;
+}
+.manufacturer-table tr:hover {
+    background: rgba(231,76,60,0.2);
+}
+.search-input {
+    margin-bottom: 10px;
+}
 </style>
 </head>
 <body>
@@ -363,6 +421,8 @@ td button {
         <button id="showRolesBtn">👥 Управление ролями</button>
         <button id="showImportsBtn">📦 Управление импортами</button>
         <button id="showMatchesBtn">📋 Посчитанные матчи</button>
+        <button id="showTanksBtn">🛸 Управление танками</button>
+        <button id="showManufacturerBtn">🏭 Управление производителями</button>
     </div>
 
     <!-- Секция ролей -->
@@ -420,19 +480,7 @@ td button {
 
         <h2>📋 Список импортов</h2>
         <table id="importsTable">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Отображение</th>
-                    <th>Начало заявок</th>
-                    <th>Конец заявок</th>
-                    <th>BR</th>
-                    <th>Танков</th>
-                    <th>Активен</th>
-                    <th>Розыгрыш</th>
-                    <th>Действия</th>
-                </tr>
-            </thead>
+            <thead><tr><th>ID</th><th>Отображение</th><th>Начало заявок</th><th>Конец заявок</th><th>BR</th><th>Танков</th><th>Активен</th><th>Розыгрыш</th><th>Действия</th></tr></thead>
             <tbody></tbody>
         </table>
     </div>
@@ -442,6 +490,78 @@ td button {
         <h2>📋 Посчитанные матчи</h2>
         <div id="calculatedMatchesList"></div>
     </div>
+
+    <!-- Секция управления танками (с фильтрами и сортировкой по БР) -->
+    <div id="tanksSection" class="section" style="display: none;">
+        <h2>🛸 Список всех танков</h2>
+        <div class="form-group" style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <input type="text" id="newTankName" placeholder="Название" style="flex:2">
+            <input type="number" id="newTankPrice" placeholder="Цена" style="flex:1">
+            <input type="number" id="newTankBr" placeholder="БР" step="0.1" style="flex:1">
+            <input type="number" id="newTankRank" placeholder="Ранг" style="flex:1">
+            <input type="text" id="newTankType" placeholder="Тип (СТ/ТТ/ЛТ/ПТ)" style="flex:1">
+            <button id="createTankBtn">➕ Добавить</button>
+        </div>
+        <!-- Фильтры -->
+        <div class="filter-bar">
+            <div class="filter-item"><label>Название:</label><input type="text" id="filterName" placeholder="Фильтр по названию"></div>
+            <div class="filter-item"><label>Тип:</label><select id="filterType"><option value="">Все</option><option value="СТ">СТ</option><option value="ТТ">ТТ</option><option value="ЛТ">ЛТ</option><option value="ПТ">ПТ</option></select></div>
+            <div class="filter-item"><label>БР от:</label><input type="number" id="filterBrMin" step="0.1" placeholder="0.0"></div>
+            <div class="filter-item"><label>БР до:</label><input type="number" id="filterBrMax" step="0.1" placeholder="10.0"></div>
+            <div class="filter-item"><label>Ранг:</label><input type="number" id="filterRank" placeholder="Ранг"></div>
+            <div class="filter-item"><label>Цена от:</label><input type="number" id="filterPriceMin" placeholder="0"></div>
+            <div class="filter-item"><label>Цена до:</label><input type="number" id="filterPriceMax" placeholder="1000000"></div>
+            <button id="resetFiltersBtn">Сбросить</button>
+        </div>
+        <div style="overflow-x: auto;">
+            <table id="tanksTable" class="tanks-admin-table">
+                <thead>
+                    <tr>
+                        <th data-sort="id">ID</th>
+                        <th data-sort="name">Название</th>
+                        <th data-sort="price">Цена</th>
+                        <th data-sort="br">БР</th>
+                        <th data-sort="rank">Ранг</th>
+                        <th data-sort="t_type">Тип</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Секция управления производителями (красивые таблицы) -->
+    <div id="manufacturerSection" class="section" style="display: none;">
+        <h2>🏭 Управление производителями школ</h2>
+        <div class="form-group">
+            <label>Выберите школу:</label>
+            <select id="manufacturerSchoolSelect"></select>
+            <button id="loadManufacturerBtn" style="margin-top: 10px;">Загрузить производителя</button>
+        </div>
+        <div class="manufacturer-tables">
+            <div class="manufacturer-table-container">
+                <h3>📋 Все танки</h3>
+                <input type="text" id="allTanksSearch" class="search-input" placeholder="Поиск по названию" style="width:100%">
+                <div style="max-height: 400px; overflow-y: auto;">
+                    <table class="manufacturer-table" id="allTanksTable">
+                        <thead><tr><th>Название</th><th>БР</th><th>Тип</th><th>Действие</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="manufacturer-table-container">
+                <h3>🏭 Танки производителя</h3>
+                <input type="text" id="manufacturerTanksSearch" class="search-input" placeholder="Поиск по названию" style="width:100%">
+                <div style="max-height: 400px; overflow-y: auto;">
+                    <table class="manufacturer-table" id="manufacturerTanksTable">
+                        <thead><tr><th>Название</th><th>БР</th><th>Тип</th><th>Действие</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Модальное окно редактирования импорта -->
@@ -450,30 +570,12 @@ td button {
         <span class="close" id="closeEditModal">&times;</span>
         <h2>✏️ Редактировать импорт</h2>
         <input type="hidden" id="editEventId">
-        <div class="form-group">
-            <label>Дата отображения (МСК):</label>
-            <input type="datetime-local" id="editDisplayDate" required>
-        </div>
-        <div class="form-group">
-            <label>Начало заявок (МСК):</label>
-            <input type="datetime-local" id="editStartDate" required>
-        </div>
-        <div class="form-group">
-            <label>Окончание заявок (МСК):</label>
-            <input type="datetime-local" id="editEndDate" required>
-        </div>
-        <div class="form-group">
-            <label>Min BR:</label>
-            <input type="number" id="editMinBr" step="0.1" value="0.3">
-        </div>
-        <div class="form-group">
-            <label>Max BR:</label>
-            <input type="number" id="editMaxBr" step="0.1" value="7.7">
-        </div>
-        <div class="form-group">
-            <label>Количество танков:</label>
-            <input type="number" id="editTanksCount" value="8" min="1">
-        </div>
+        <div class="form-group"><label>Дата отображения (МСК):</label><input type="datetime-local" id="editDisplayDate" required></div>
+        <div class="form-group"><label>Начало заявок (МСК):</label><input type="datetime-local" id="editStartDate" required></div>
+        <div class="form-group"><label>Окончание заявок (МСК):</label><input type="datetime-local" id="editEndDate" required></div>
+        <div class="form-group"><label>Min BR:</label><input type="number" id="editMinBr" step="0.1" value="0.3"></div>
+        <div class="form-group"><label>Max BR:</label><input type="number" id="editMaxBr" step="0.1" value="7.7"></div>
+        <div class="form-group"><label>Количество танков:</label><input type="number" id="editTanksCount" value="8" min="1"></div>
         <button id="saveEditImportBtn">💾 Сохранить изменения</button>
     </div>
 </div>
@@ -484,25 +586,11 @@ td button {
         <span class="close" id="closeMatchEditModal">&times;</span>
         <h2>✏️ Редактировать результат матча #<span id="editMatchId"></span></h2>
         <form id="editMatchForm">
-            <div class="form-group">
-                <label>Судья:</label>
-                <select id="editRefereeSchool"></select>
-            </div>
-            <div class="form-group">
-                <label>Победитель:</label>
-                <select id="editWinnerTeam">
-                    <option value="1">Команда 1</option>
-                    <option value="2">Команда 2</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Счёт (победитель всегда первый):</label>
-                <input type="text" id="editScore" placeholder="3:1">
-            </div>
+            <div class="form-group"><label>Судья:</label><select id="editRefereeSchool"></select></div>
+            <div class="form-group"><label>Победитель:</label><select id="editWinnerTeam"><option value="1">Команда 1</option><option value="2">Команда 2</option></select></div>
+            <div class="form-group"><label>Счёт (победитель всегда первый):</label><input type="text" id="editScore" placeholder="3:1"></div>
             <div id="editTeamsResultsContainer"></div>
-            <div style="display: flex; justify-content: center; gap: 16px; margin-top: 20px;">
-                <button type="button" id="saveEditMatchBtn" style="background: #2c5f2d;">💾 Сохранить изменения</button>
-            </div>
+            <div style="display: flex; justify-content: center; gap: 16px; margin-top: 20px;"><button type="button" id="saveEditMatchBtn" style="background: #2c5f2d;">💾 Сохранить изменения</button></div>
         </form>
     </div>
 </div>
@@ -540,23 +628,19 @@ document.getElementById("logoutBtn").onclick = async () => {
 };
 
 // ---------- Переключение секций ----------
-document.getElementById("showRolesBtn").onclick = () => {
-    document.getElementById("rolesSection").style.display = "block";
-    document.getElementById("importsSection").style.display = "none";
-    document.getElementById("matchesSection").style.display = "none";
-};
-document.getElementById("showImportsBtn").onclick = () => {
-    document.getElementById("rolesSection").style.display = "none";
-    document.getElementById("importsSection").style.display = "block";
-    document.getElementById("matchesSection").style.display = "none";
-    loadImports();
-};
-document.getElementById("showMatchesBtn").onclick = () => {
+function showSection(section) {
     document.getElementById("rolesSection").style.display = "none";
     document.getElementById("importsSection").style.display = "none";
-    document.getElementById("matchesSection").style.display = "block";
-    loadCalculatedMatches();
-};
+    document.getElementById("matchesSection").style.display = "none";
+    document.getElementById("tanksSection").style.display = "none";
+    document.getElementById("manufacturerSection").style.display = "none";
+    document.getElementById(`${section}Section`).style.display = "block";
+}
+document.getElementById("showRolesBtn").onclick = () => showSection("roles");
+document.getElementById("showImportsBtn").onclick = () => { showSection("imports"); loadImports(); };
+document.getElementById("showMatchesBtn").onclick = () => { showSection("matches"); loadCalculatedMatches(); };
+document.getElementById("showTanksBtn").onclick = () => { showSection("tanks"); loadTanksAdmin(); };
+document.getElementById("showManufacturerBtn").onclick = () => { showSection("manufacturer"); loadSchoolsForManufacturer(); };
 
 // ---------- Управление ролями ----------
 async function loadUsers() {
@@ -571,7 +655,6 @@ async function loadUsers() {
         select.appendChild(option);
     });
 }
-
 async function loadSchools() {
     const res = await authFetch(`${api}/admin/schools`);
     const schools = await res.json();
@@ -585,7 +668,6 @@ async function loadSchools() {
         select.appendChild(option);
     });
 }
-
 async function loadRoles(userId) {
     const res = await authFetch(`${api}/admin/roles/${userId}`);
     const roles = await res.json();
@@ -597,50 +679,25 @@ async function loadRoles(userId) {
         roles.forEach(r => {
             const div = document.createElement("div");
             div.className = "role-item";
-            div.innerHTML = `
-                <span>${schoolsMap[r.school_id] || `Школа ${r.school_id}`} — ${r.role === "commander" ? "Командир" : "Заместитель"}</span>
-                <button onclick="removeRole(${userId}, ${r.school_id}, '${r.role}')">✖</button>
-            `;
+            div.innerHTML = `<span>${schoolsMap[r.school_id] || `Школа ${r.school_id}`} — ${r.role === "commander" ? "Командир" : "Заместитель"}</span><button onclick="removeRole(${userId}, ${r.school_id}, '${r.role}')">✖</button>`;
             container.appendChild(div);
         });
     }
 }
-
 async function assignRole() {
     const userId = document.getElementById("userSelect").value;
     const schoolId = document.getElementById("schoolSelect").value;
     const role = document.getElementById("roleSelect").value;
     if (!userId || !schoolId) return;
-    const res = await authFetch(`${api}/admin/assign_role`, {
-        method: "POST",
-        body: JSON.stringify({ user_id: parseInt(userId), school_id: parseInt(schoolId), role })
-    });
-    if (res.ok) {
-        alert("Роль назначена");
-        loadRoles(userId);
-    } else {
-        const err = await res.json();
-        alert("Ошибка: " + (err.detail || ""));
-    }
+    const res = await authFetch(`${api}/admin/assign_role`, { method: "POST", body: JSON.stringify({ user_id: parseInt(userId), school_id: parseInt(schoolId), role }) });
+    if (res.ok) { alert("Роль назначена"); loadRoles(userId); } else { const err = await res.json(); alert("Ошибка: " + (err.detail || "")); }
 }
-
 async function removeRole(userId, schoolId, role) {
-    const res = await authFetch(`${api}/admin/remove_role`, {
-        method: "DELETE",
-        body: JSON.stringify({ user_id: userId, school_id: schoolId, role })
-    });
-    if (res.ok) {
-        loadRoles(userId);
-    } else {
-        alert("Ошибка удаления");
-    }
+    const res = await authFetch(`${api}/admin/remove_role`, { method: "DELETE", body: JSON.stringify({ user_id: userId, school_id: schoolId, role }) });
+    if (res.ok) loadRoles(userId); else alert("Ошибка удаления");
 }
-
 document.getElementById("assignBtn").onclick = assignRole;
-document.getElementById("userSelect").onchange = () => {
-    const userId = document.getElementById("userSelect").value;
-    if (userId) loadRoles(userId);
-};
+document.getElementById("userSelect").onchange = () => { const userId = document.getElementById("userSelect").value; if (userId) loadRoles(userId); };
 
 // ---------- Управление импортами ----------
 document.getElementById("createImportBtn").onclick = async () => {
@@ -650,36 +707,11 @@ document.getElementById("createImportBtn").onclick = async () => {
     const minBr = parseFloat(document.getElementById("minBr").value);
     const maxBr = parseFloat(document.getElementById("maxBr").value);
     const tanksCount = parseInt(document.getElementById("tanksCount").value);
-    if (!displayDate || !startDate || !endDate) {
-        alert("Укажите все три даты");
-        return;
-    }
-    const params = new URLSearchParams({
-        display_date: displayDate,
-        start_date: startDate,
-        end_date: endDate,
-        min_br: minBr,
-        max_br: maxBr,
-        tanks_count: tanksCount
-    });
-    try {
-        const res = await authFetch(`${api}/admin/import/create?${params.toString()}`, { method: "POST" });
-        const data = await res.json();
-        if (res.ok) {
-            alert("Импорт создан!");
-            document.getElementById("displayDate").value = "";
-            document.getElementById("startDate").value = "";
-            document.getElementById("endDate").value = "";
-            loadImports();
-        } else {
-            alert("Ошибка: " + (data.detail || "Неизвестная ошибка"));
-        }
-    } catch (err) {
-        console.error(err);
-        alert("Ошибка соединения с сервером");
-    }
+    if (!displayDate || !startDate || !endDate) { alert("Укажите все три даты"); return; }
+    const params = new URLSearchParams({ display_date: displayDate, start_date: startDate, end_date: endDate, min_br: minBr, max_br: maxBr, tanks_count: tanksCount });
+    const res = await authFetch(`${api}/admin/import/create?${params.toString()}`, { method: "POST" });
+    if (res.ok) { alert("Импорт создан!"); loadImports(); } else { const err = await res.json(); alert("Ошибка: " + (err.detail || "")); }
 };
-
 async function loadImports() {
     const res = await authFetch(`${api}/admin/imports`);
     const imports = await res.json();
@@ -696,55 +728,28 @@ async function loadImports() {
             <td>${imp.tanks_count}</td>
             <td>${imp.is_active ? "✅" : "❌"}</td>
             <td>${imp.is_drawn ? "✅" : "❌"}</td>
-            <td>
-                <button onclick="openEditModal(${imp.id})">✏️ Редактировать</button>
-                ${!imp.is_drawn ? `<button onclick="drawImport(${imp.id})">🎲 Розыгрыш</button>` : ""}
-                <button onclick="deleteImport(${imp.id})">🗑️ Удалить</button>
-             </td>
+            <td><button onclick="openEditModal(${imp.id})">✏️ Редактировать</button>${!imp.is_drawn ? `<button onclick="drawImport(${imp.id})">🎲 Розыгрыш</button>` : ""}<button onclick="deleteImport(${imp.id})">🗑️ Удалить</button></td>
         `;
         tbody.appendChild(tr);
     }
 }
-
-async function drawImport(eventId) {
-    if (confirm("Провести розыгрыш? Победители получат танки, деньги спишутся.")) {
-        const res = await authFetch(`${api}/admin/import/draw/${eventId}`, { method: "POST" });
-        if (res.ok) {
-            alert("Розыгрыш проведён");
-            loadImports();
-        } else {
-            const err = await res.json();
-            alert("Ошибка: " + (err.detail || ""));
-        }
-    }
-}
-
-async function deleteImport(eventId) {
-    if (confirm("Удалить импорт навсегда? Это действие необратимо.")) {
-        const res = await authFetch(`${api}/admin/import/${eventId}`, { method: "DELETE" });
-        if (res.ok) loadImports();
-    }
-}
-
-let currentEditEventId = null;
+async function drawImport(eventId) { if (confirm("Провести розыгрыш?")) { const res = await authFetch(`${api}/admin/import/draw/${eventId}`, { method: "POST" }); if (res.ok) { alert("Розыгрыш проведён"); loadImports(); } } }
+async function deleteImport(eventId) { if (confirm("Удалить импорт?")) { const res = await authFetch(`${api}/admin/import/${eventId}`, { method: "DELETE" }); if (res.ok) loadImports(); } }
 async function openEditModal(eventId) {
-    currentEditEventId = eventId;
     const res = await authFetch(`${api}/admin/imports`);
     const imports = await res.json();
     const imp = imports.find(i => i.id === eventId);
     if (!imp) return;
     document.getElementById("editEventId").value = eventId;
-    document.getElementById("editDisplayDate").value = imp.display_date.slice(0, 16);
-    document.getElementById("editStartDate").value = imp.start_date.slice(0, 16);
-    document.getElementById("editEndDate").value = imp.end_date.slice(0, 16);
+    document.getElementById("editDisplayDate").value = imp.display_date.slice(0,16);
+    document.getElementById("editStartDate").value = imp.start_date.slice(0,16);
+    document.getElementById("editEndDate").value = imp.end_date.slice(0,16);
     document.getElementById("editMinBr").value = imp.min_br;
     document.getElementById("editMaxBr").value = imp.max_br;
     document.getElementById("editTanksCount").value = imp.tanks_count;
     document.getElementById("editImportModal").style.display = "block";
 }
-document.getElementById("closeEditModal").onclick = () => {
-    document.getElementById("editImportModal").style.display = "none";
-};
+document.getElementById("closeEditModal").onclick = () => document.getElementById("editImportModal").style.display = "none";
 document.getElementById("saveEditImportBtn").onclick = async () => {
     const eventId = document.getElementById("editEventId").value;
     const displayDate = document.getElementById("editDisplayDate").value;
@@ -753,61 +758,27 @@ document.getElementById("saveEditImportBtn").onclick = async () => {
     const minBr = parseFloat(document.getElementById("editMinBr").value);
     const maxBr = parseFloat(document.getElementById("editMaxBr").value);
     const tanksCount = parseInt(document.getElementById("editTanksCount").value);
-    if (!displayDate || !startDate || !endDate) {
-        alert("Заполните все даты");
-        return;
-    }
-    const body = {
-        display_date: displayDate,
-        start_date: startDate,
-        end_date: endDate,
-        min_br: minBr,
-        max_br: maxBr,
-        tanks_count: tanksCount
-    };
-    try {
-        const res = await authFetch(`${api}/admin/import/${eventId}`, {
-            method: "PUT",
-            body: JSON.stringify(body)
-        });
-        if (res.ok) {
-            alert("Импорт обновлён");
-            document.getElementById("editImportModal").style.display = "none";
-            loadImports();
-        } else {
-            const err = await res.json();
-            alert("Ошибка: " + (err.detail || "Неизвестная ошибка"));
-        }
-    } catch (err) {
-        console.error(err);
-        alert("Ошибка соединения с сервером");
-    }
+    if (!displayDate || !startDate || !endDate) { alert("Заполните все даты"); return; }
+    const body = { display_date: displayDate, start_date: startDate, end_date: endDate, min_br: minBr, max_br: maxBr, tanks_count: tanksCount };
+    const res = await authFetch(`${api}/admin/import/${eventId}`, { method: "PUT", body: JSON.stringify(body) });
+    if (res.ok) { alert("Импорт обновлён"); document.getElementById("editImportModal").style.display = "none"; loadImports(); } else { const err = await res.json(); alert("Ошибка: " + (err.detail || "")); }
 };
 
-// ---------- Управление матчами ----------
+// ---------- Управление матчами (без изменений) ----------
 async function loadCalculatedMatches() {
     const res = await authFetch(`${api}/admin/matches/calculated`);
     const matches = await res.json();
     const container = document.getElementById("calculatedMatchesList");
     container.innerHTML = "";
-    if (matches.length === 0) {
-        container.innerHTML = "<p>Нет посчитанных матчей</p>";
-        return;
-    }
+    if (matches.length === 0) { container.innerHTML = "<p>Нет посчитанных матчей</p>"; return; }
     matches.forEach(m => {
         const card = document.createElement("div");
         card.className = "match-card";
-        card.innerHTML = `
-            <div class="match-date">${new Date(m.date_time).toLocaleString()}</div>
-            <div class="match-teams">${m.team1} vs ${m.team2}</div>
-            <div class="match-score">Счёт: ${m.score} (победитель команда ${m.winner_team})</div>
-        `;
+        card.innerHTML = `<div class="match-date">${new Date(m.date_time).toLocaleString()}</div><div class="match-teams">${m.team1} vs ${m.team2}</div><div class="match-score">Счёт: ${m.score} (победитель команда ${m.winner_team})</div>`;
         card.onclick = () => openEditMatchResult(m.id);
         container.appendChild(card);
     });
 }
-
-// Функция для создания секции потерь для школы
 function createTankDeathsSection(school, maxDeaths, existingDeathsMap = new Map()) {
     const container = document.createElement("div");
     container.className = "tanks-deaths-section";
@@ -819,35 +790,19 @@ function createTankDeathsSection(school, maxDeaths, existingDeathsMap = new Map(
             const deathValue = existingDeathsMap.get(tankId) || 0;
             const rowDiv = document.createElement("div");
             rowDiv.className = "tank-death-row";
-            rowDiv.innerHTML = `
-                <span class="tank-death-name">${tank.name}</span>
-                <input type="number" class="tank-death-input" min="0" max="${maxDeaths}" value="${deathValue}" step="1" data-tank-id="${tankId}">
-            `;
+            rowDiv.innerHTML = `<span class="tank-death-name">${tank.name}</span><input type="number" class="tank-death-input" min="0" max="${maxDeaths}" value="${deathValue}" step="1" data-tank-id="${tankId}">`;
             const input = rowDiv.querySelector(".tank-death-input");
-            input.addEventListener("change", function() {
-                let val = parseInt(this.value);
-                if (isNaN(val)) val = 0;
-                if (val < 0) val = 0;
-                if (val > maxDeaths) val = maxDeaths;
-                this.value = val;
-            });
+            input.addEventListener("change", function() { let val = parseInt(this.value); if (isNaN(val)) val = 0; if (val < 0) val = 0; if (val > maxDeaths) val = maxDeaths; this.value = val; });
             container.appendChild(rowDiv);
         }
     });
     return container;
 }
-
 async function openEditMatchResult(matchId) {
-    // Получаем полный объект матча через обычный эндпоинт (публичный)
     const res = await fetch(`${api}/matches/${matchId}`);
     const match = await res.json();
-    if (!match) {
-        alert("Матч не найден");
-        return;
-    }
+    if (!match) { alert("Матч не найден"); return; }
     currentEditingMatch = match;
-
-    // Получаем текущий сохранённый результат (чтобы заполнить потери, бонусы, штрафы)
     const matchResultRes = await authFetch(`${api}/admin/matches/calculated`);
     const matchesList = await matchResultRes.json();
     const matchData = matchesList.find(m => m.id == matchId);
@@ -855,7 +810,6 @@ async function openEditMatchResult(matchId) {
     const team1Result = resultData ? resultData.team1_schools : [];
     const team2Result = resultData ? resultData.team2_schools : [];
 
-    // Загружаем школы для выбора судьи
     const schoolsRes = await fetch(`${api}/schools/`);
     const schools = await schoolsRes.json();
     const refereeSelect = document.getElementById("editRefereeSchool");
@@ -884,21 +838,13 @@ async function openEditMatchResult(matchId) {
             const bonus = schoolResult ? schoolResult.bonuses : 0;
             const penalty = schoolResult ? schoolResult.penalties : 0;
             const tankDeathsMap = new Map();
-            if (schoolResult && schoolResult.tank_deaths) {
-                schoolResult.tank_deaths.forEach(d => tankDeathsMap.set(d.tank_id, d.deaths));
-            }
+            if (schoolResult && schoolResult.tank_deaths) schoolResult.tank_deaths.forEach(d => tankDeathsMap.set(d.tank_id, d.deaths));
 
             const row = document.createElement("div");
             row.className = "result-school-row";
             row.dataset.schoolId = school.id;
             row.dataset.team = teamNumber;
-            row.innerHTML = `
-                <div class="result-school-name">${school.name}</div>
-                <div class="result-school-inputs">
-                    <label>Бонусы: <input type="number" class="bonus-input" value="${bonus}" min="0" step="1"></label>
-                    <label>Штрафы: <input type="number" class="penalty-input" value="${penalty}" min="0" step="1"></label>
-                </div>
-            `;
+            row.innerHTML = `<div class="result-school-name">${school.name}</div><div class="result-school-inputs"><label>Бонусы: <input type="number" class="bonus-input" value="${bonus}" min="0" step="1"></label><label>Штрафы: <input type="number" class="penalty-input" value="${penalty}" min="0" step="1"></label></div>`;
             section.appendChild(row);
             const maxDeaths = parseInt(match.format);
             const deathsSection = createTankDeathsSection(school, maxDeaths, tankDeathsMap);
@@ -906,7 +852,6 @@ async function openEditMatchResult(matchId) {
         });
         return section;
     }
-
     function addMercenaryRow(container, teamNumber, schoolId = null, activity = "medium") {
         const mercDiv = document.createElement("div");
         mercDiv.className = "mercenary-item";
@@ -923,11 +868,7 @@ async function openEditMatchResult(matchId) {
         }
         const activitySelect = document.createElement("select");
         activitySelect.className = "mercenary-activity";
-        activitySelect.innerHTML = `
-            <option value="low" ${activity === "low" ? "selected" : ""}>Низкая</option>
-            <option value="medium" ${activity === "medium" ? "selected" : ""}>Средняя</option>
-            <option value="high" ${activity === "high" ? "selected" : ""}>Высокая</option>
-        `;
+        activitySelect.innerHTML = `<option value="low" ${activity === "low" ? "selected" : ""}>Низкая</option><option value="medium" ${activity === "medium" ? "selected" : ""}>Средняя</option><option value="high" ${activity === "high" ? "selected" : ""}>Высокая</option>`;
         const removeBtn = document.createElement("button");
         removeBtn.textContent = "✖";
         removeBtn.style.background = "#880000";
@@ -945,7 +886,6 @@ async function openEditMatchResult(matchId) {
     container.appendChild(team1Section);
     container.appendChild(team2Section);
 
-    // Добавляем контейнеры для наёмников в каждую секцию
     const mercenariesData = (resultData && resultData.mercenaries) || [];
     const mercsForTeam1 = mercenariesData.filter(m => m.team == 1);
     const mercsForTeam2 = mercenariesData.filter(m => m.team == 2);
@@ -978,21 +918,14 @@ async function openEditMatchResult(matchId) {
 
     document.getElementById("editMatchResultModal").style.display = "block";
 }
-
-document.getElementById("closeMatchEditModal").onclick = () => {
-    document.getElementById("editMatchResultModal").style.display = "none";
-};
-
-// Сбор данных из формы и отправка
+document.getElementById("closeMatchEditModal").onclick = () => document.getElementById("editMatchResultModal").style.display = "none";
 document.getElementById("saveEditMatchBtn").onclick = async () => {
     const matchId = document.getElementById("editMatchId").textContent;
     const refereeId = document.getElementById("editRefereeSchool").value;
     const winnerTeam = parseInt(document.getElementById("editWinnerTeam").value);
     const score = document.getElementById("editScore").value;
 
-    const team1_schools = [];
-    const team2_schools = [];
-
+    const team1_schools = [], team2_schools = [];
     const teamSections = document.querySelectorAll("#editTeamsResultsContainer .result-team-section");
     for (let idx = 0; idx < teamSections.length; idx++) {
         const section = teamSections[idx];
@@ -1008,65 +941,235 @@ document.getElementById("saveEditMatchBtn").onclick = async () => {
             deathInputs.forEach(inp => {
                 const tankId = parseInt(inp.dataset.tankId);
                 const deaths = parseInt(inp.value) || 0;
-                if (deaths > 0) {
-                    tankDeaths.push({ tank_id: tankId, deaths });
-                }
+                if (deaths > 0) tankDeaths.push({ tank_id: tankId, deaths });
             });
-            const schoolData = {
-                school_id: schoolId,
-                bonuses: bonus,
-                penalties: penalty,
-                tank_deaths: tankDeaths
-            };
+            const schoolData = { school_id: schoolId, bonuses: bonus, penalties: penalty, tank_deaths: tankDeaths };
             if (team === 1) team1_schools.push(schoolData);
             else team2_schools.push(schoolData);
         }
     }
 
-    // Сбор наёмников
     const mercenaries = [];
     document.querySelectorAll("#editTeamsResultsContainer .mercenary-item").forEach(merc => {
         const schoolSelect = merc.querySelector(".mercenary-school");
         const activity = merc.querySelector(".mercenary-activity").value;
         const schoolId = schoolSelect.value;
-        if (schoolId) {
-            mercenaries.push({
-                school_id: parseInt(schoolId),
-                activity: activity,
-                team: parseInt(merc.dataset.team)
-            });
-        }
+        if (schoolId) mercenaries.push({ school_id: parseInt(schoolId), activity: activity, team: parseInt(merc.dataset.team) });
     });
 
-    const payload = {
-        referee_school_id: refereeId ? parseInt(refereeId) : null,
-        winner_team: winnerTeam,
-        score: score,
-        team1_schools: team1_schools,
-        team2_schools: team2_schools,
-        mercenaries: mercenaries
-    };
-
-    try {
-        const res = await authFetch(`${api}/admin/matches/${matchId}/result`, {
-            method: "PUT",
-            body: JSON.stringify(payload)
-        });
-        if (res.ok) {
-            alert("Результат обновлён и пересчитан!");
-            document.getElementById("editMatchResultModal").style.display = "none";
-            loadCalculatedMatches();
-        } else {
-            const err = await res.json();
-            alert("Ошибка: " + (err.detail || "Неизвестная ошибка"));
-        }
-    } catch (err) {
-        console.error(err);
-        alert("Ошибка соединения с сервером");
-    }
+    const payload = { referee_school_id: refereeId ? parseInt(refereeId) : null, winner_team: winnerTeam, score: score, team1_schools: team1_schools, team2_schools: team2_schools, mercenaries: mercenaries };
+    const res = await authFetch(`${api}/admin/matches/${matchId}/result`, { method: "PUT", body: JSON.stringify(payload) });
+    if (res.ok) { alert("Результат обновлён и пересчитан!"); document.getElementById("editMatchResultModal").style.display = "none"; loadCalculatedMatches(); }
+    else { const err = await res.json(); alert("Ошибка: " + (err.detail || "")); }
 };
 
-// ---------- Загрузка текущего пользователя ----------
+// ---------- Управление танками (с фильтрами и сортировкой по БР) ----------
+let allTanks = [];
+let currentTanksSort = { field: "br", order: "asc" }; // по умолчанию сортировка по БР возрастание
+
+async function loadTanksAdmin() {
+    const res = await authFetch(`${api}/admin/tanks/`);
+    allTanks = await res.json();
+    renderTanksTable();
+}
+function renderTanksTable() {
+    let filtered = [...allTanks];
+    const nameFilter = document.getElementById("filterName").value.toLowerCase();
+    const typeFilter = document.getElementById("filterType").value;
+    const brMin = parseFloat(document.getElementById("filterBrMin").value);
+    const brMax = parseFloat(document.getElementById("filterBrMax").value);
+    const rankFilter = parseInt(document.getElementById("filterRank").value);
+    const priceMin = parseInt(document.getElementById("filterPriceMin").value);
+    const priceMax = parseInt(document.getElementById("filterPriceMax").value);
+    if (nameFilter) filtered = filtered.filter(t => t.name.toLowerCase().includes(nameFilter));
+    if (typeFilter) filtered = filtered.filter(t => t.t_type === typeFilter);
+    if (!isNaN(brMin)) filtered = filtered.filter(t => t.br >= brMin);
+    if (!isNaN(brMax)) filtered = filtered.filter(t => t.br <= brMax);
+    if (!isNaN(rankFilter)) filtered = filtered.filter(t => t.rank === rankFilter);
+    if (!isNaN(priceMin)) filtered = filtered.filter(t => t.price >= priceMin);
+    if (!isNaN(priceMax)) filtered = filtered.filter(t => t.price <= priceMax);
+    // Сортировка по текущему полю
+    filtered.sort((a,b) => {
+        let valA = a[currentTanksSort.field], valB = b[currentTanksSort.field];
+        if (currentTanksSort.field === "name") { valA = valA.toLowerCase(); valB = valB.toLowerCase(); }
+        if (valA < valB) return currentTanksSort.order === "asc" ? -1 : 1;
+        if (valA > valB) return currentTanksSort.order === "asc" ? 1 : -1;
+        return 0;
+    });
+    const tbody = document.querySelector("#tanksTable tbody");
+    tbody.innerHTML = "";
+    filtered.forEach(t => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${t.id}</td>
+            <td><input type="text" class="edit-name" value="${escapeHtml(t.name)}"></td>
+            <td><input type="number" class="edit-price" value="${t.price}"></td>
+            <td><input type="number" step="0.1" class="edit-br" value="${t.br}"></td>
+            <td><input type="number" class="edit-rank" value="${t.rank}"></td>
+            <td><input type="text" class="edit-type" value="${escapeHtml(t.t_type)}"></td>
+            <td><button class="save-tank-btn" data-id="${t.id}">💾 Сохранить</button> <button class="delete-tank-btn" data-id="${t.id}">🗑️ Удалить</button></td>
+        `;
+        tbody.appendChild(tr);
+    });
+    attachTankButtons();
+}
+function attachTankButtons() {
+    document.querySelectorAll(".save-tank-btn").forEach(btn => {
+        btn.onclick = async () => {
+            const id = btn.dataset.id;
+            const row = btn.closest("tr");
+            const name = row.querySelector(".edit-name").value;
+            const price = parseInt(row.querySelector(".edit-price").value);
+            const br = parseFloat(row.querySelector(".edit-br").value);
+            const rank = parseInt(row.querySelector(".edit-rank").value);
+            const t_type = row.querySelector(".edit-type").value;
+            const res = await authFetch(`${api}/admin/tanks/${id}`, { method: "PUT", body: JSON.stringify({ name, price, br, rank, t_type }) });
+            if (res.ok) alert("Сохранено");
+            else { const err = await res.json(); alert("Ошибка: " + (err.detail || "")); }
+        };
+    });
+    document.querySelectorAll(".delete-tank-btn").forEach(btn => {
+        btn.onclick = async () => {
+            if (!confirm("Удалить танк? Будут проверены зависимости.")) return;
+            const id = btn.dataset.id;
+            const res = await authFetch(`${api}/admin/tanks/${id}`, { method: "DELETE" });
+            if (res.ok) { alert("Удалено"); loadTanksAdmin(); }
+            else { const err = await res.json(); alert("Ошибка: " + (err.detail || "")); }
+        };
+    });
+}
+document.getElementById("createTankBtn").onclick = async () => {
+    const name = document.getElementById("newTankName").value;
+    const price = parseInt(document.getElementById("newTankPrice").value);
+    const br = parseFloat(document.getElementById("newTankBr").value);
+    const rank = parseInt(document.getElementById("newTankRank").value);
+    const t_type = document.getElementById("newTankType").value;
+    if (!name || isNaN(price)) return alert("Заполните название и цену");
+    const res = await authFetch(`${api}/admin/tanks/`, { method: "POST", body: JSON.stringify({ name, price, br, rank, t_type }) });
+    if (res.ok) { alert("Танк создан"); loadTanksAdmin(); document.getElementById("newTankName").value = ""; document.getElementById("newTankPrice").value = ""; document.getElementById("newTankBr").value = ""; document.getElementById("newTankRank").value = ""; document.getElementById("newTankType").value = ""; }
+    else { const err = await res.json(); alert("Ошибка: " + (err.detail || "")); }
+};
+// Обработчики фильтров и сортировки
+document.getElementById("filterName").addEventListener("input", () => renderTanksTable());
+document.getElementById("filterType").addEventListener("change", () => renderTanksTable());
+document.getElementById("filterBrMin").addEventListener("input", () => renderTanksTable());
+document.getElementById("filterBrMax").addEventListener("input", () => renderTanksTable());
+document.getElementById("filterRank").addEventListener("input", () => renderTanksTable());
+document.getElementById("filterPriceMin").addEventListener("input", () => renderTanksTable());
+document.getElementById("filterPriceMax").addEventListener("input", () => renderTanksTable());
+document.getElementById("resetFiltersBtn").onclick = () => {
+    document.getElementById("filterName").value = "";
+    document.getElementById("filterType").value = "";
+    document.getElementById("filterBrMin").value = "";
+    document.getElementById("filterBrMax").value = "";
+    document.getElementById("filterRank").value = "";
+    document.getElementById("filterPriceMin").value = "";
+    document.getElementById("filterPriceMax").value = "";
+    renderTanksTable();
+};
+document.querySelectorAll("#tanksTable th[data-sort]").forEach(th => {
+    th.addEventListener("click", () => {
+        const field = th.getAttribute("data-sort");
+        if (currentTanksSort.field === field) currentTanksSort.order = currentTanksSort.order === "asc" ? "desc" : "asc";
+        else { currentTanksSort.field = field; currentTanksSort.order = "asc"; }
+        renderTanksTable();
+    });
+});
+
+// ---------- Управление производителями (две красивые таблицы) ----------
+let allTanksForManufacturer = [];
+let currentManufacturerTanks = [];
+
+async function loadSchoolsForManufacturer() {
+    const res = await authFetch(`${api}/admin/schools`);
+    const schools = await res.json();
+    const select = document.getElementById("manufacturerSchoolSelect");
+    select.innerHTML = "";
+    schools.forEach(s => { const opt = document.createElement("option"); opt.value = s.id; opt.textContent = s.name; select.appendChild(opt); });
+    if (select.options.length) {
+        await loadAllTanksForManufacturer();
+        await loadManufacturerTanksForSchool();
+    }
+}
+async function loadAllTanksForManufacturer() {
+    const res = await authFetch(`${api}/admin/tanks/`);
+    allTanksForManufacturer = await res.json();
+    renderAllTanksTable();
+}
+async function loadManufacturerTanksForSchool() {
+    const schoolId = document.getElementById("manufacturerSchoolSelect").value;
+    if (!schoolId) return;
+    const res = await authFetch(`${api}/admin/schools/${schoolId}/manufacturer`);
+    currentManufacturerTanks = await res.json();
+    renderManufacturerTanksTable();
+}
+function renderAllTanksTable() {
+    const search = document.getElementById("allTanksSearch").value.toLowerCase();
+    let filtered = allTanksForManufacturer.filter(t => t.name.toLowerCase().includes(search));
+    filtered.sort((a,b) => a.br - b.br);
+    const tbody = document.querySelector("#allTanksTable tbody");
+    tbody.innerHTML = "";
+    filtered.forEach(t => {
+        const already = currentManufacturerTanks.some(mt => mt.id === t.id);
+        const btn = already ? `<button disabled style="background:#555;">✓ В списке</button>` : `<button class="add-manu-btn" data-id="${t.id}">➕ Добавить</button>`;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${escapeHtml(t.name)}</td><td>${t.br}</td><td>${t.t_type}</td><td>${btn}</td>`;
+        tbody.appendChild(tr);
+    });
+    document.querySelectorAll(".add-manu-btn").forEach(btn => {
+        btn.onclick = async () => {
+            const tankId = btn.dataset.id;
+            const schoolId = document.getElementById("manufacturerSchoolSelect").value;
+            const res = await authFetch(`${api}/admin/schools/${schoolId}/manufacturer`, { method: "POST", body: JSON.stringify({ tank_id: parseInt(tankId) }) });
+            if (res.ok) { alert("Танк добавлен производителю"); await loadManufacturerTanksForSchool(); renderAllTanksTable(); }
+            else { const err = await res.json(); alert("Ошибка: " + (err.detail || "")); }
+        };
+    });
+}
+function renderManufacturerTanksTable() {
+    const search = document.getElementById("manufacturerTanksSearch").value.toLowerCase();
+    let filtered = currentManufacturerTanks.filter(t => t.name.toLowerCase().includes(search));
+    filtered.sort((a,b) => a.br - b.br);
+    const tbody = document.querySelector("#manufacturerTanksTable tbody");
+    tbody.innerHTML = "";
+    filtered.forEach(t => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${escapeHtml(t.name)}</td><td>${t.br}</td><td>${t.t_type}</td><td><button class="remove-manu-btn" data-id="${t.id}">❌ Удалить</button></td>`;
+        tbody.appendChild(tr);
+    });
+    document.querySelectorAll(".remove-manu-btn").forEach(btn => {
+        btn.onclick = async () => {
+            const tankId = btn.dataset.id;
+            const schoolId = document.getElementById("manufacturerSchoolSelect").value;
+            const res = await authFetch(`${api}/admin/schools/${schoolId}/manufacturer/${tankId}`, { method: "DELETE" });
+            if (res.ok) { alert("Танк удалён из производителя"); await loadManufacturerTanksForSchool(); renderAllTanksTable(); }
+            else { const err = await res.json(); alert("Ошибка: " + (err.detail || "")); }
+        };
+    });
+}
+document.getElementById("loadManufacturerBtn").onclick = async () => {
+    await loadAllTanksForManufacturer();
+    await loadManufacturerTanksForSchool();
+};
+document.getElementById("manufacturerSchoolSelect").onchange = async () => {
+    await loadAllTanksForManufacturer();
+    await loadManufacturerTanksForSchool();
+};
+document.getElementById("allTanksSearch").addEventListener("input", () => renderAllTanksTable());
+document.getElementById("manufacturerTanksSearch").addEventListener("input", () => renderManufacturerTanksTable());
+
+// ---------- Вспомогательные функции ----------
+function escapeHtml(str) {
+    if (!str) return "";
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
+// ---------- Загрузка текущего пользователя и инициализация ----------
 async function loadCurrentUser() {
     try {
         const res = await authFetch(`${api}/me`);
@@ -1081,14 +1184,10 @@ async function loadCurrentUser() {
         window.location.href = "login.html";
     }
 }
-
 loadCurrentUser();
 loadSchools().then(() => {
     loadUsers();
-    // По умолчанию показываем секцию ролей
-    document.getElementById("rolesSection").style.display = "block";
-    document.getElementById("importsSection").style.display = "none";
-    document.getElementById("matchesSection").style.display = "none";
+    showSection("roles");
 });
 </script>
 </body>

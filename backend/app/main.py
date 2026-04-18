@@ -1991,6 +1991,167 @@ def update_match_result(
     # Пересчёт отредактирует старые Discord-сообщения (ID уже есть)
     return calculate_match_result(match_id, db, current_user)
 
+@app.get("/admin/tanks/")
+def admin_get_tanks(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if not current_user.is_admin:
+        raise HTTPException(403, "Доступ запрещён")
+    tanks = db.query(Tank).order_by(Tank.id).all()
+    return [{"id": t.id, "name": t.name, "price": t.price, "rank": t.rank, "br": t.br, "t_type": t.t_type} for t in tanks]
+
+@app.post("/admin/tanks/")
+def admin_create_tank(
+    req: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if not current_user.is_admin:
+        raise HTTPException(403, "Доступ запрещён")
+    name = req.get("name")
+    price = req.get("price")
+    rank = req.get("rank", 1)
+    br = req.get("br", 0.0)
+    t_type = req.get("t_type", "-")
+    if not name or price is None:
+        raise HTTPException(400, "Не указано название или цена")
+    existing = db.query(Tank).filter(Tank.name == name).first()
+    if existing:
+        raise HTTPException(400, "Танк с таким названием уже существует")
+    tank = Tank(name=name, price=price, rank=rank, br=br, t_type=t_type)
+    db.add(tank)
+    db.commit()
+    db.refresh(tank)
+    return {"id": tank.id, "name": tank.name, "price": tank.price, "rank": tank.rank, "br": tank.br, "t_type": tank.t_type}
+
+@app.put("/admin/tanks/{tank_id}")
+def admin_update_tank(
+    tank_id: int,
+    req: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if not current_user.is_admin:
+        raise HTTPException(403, "Доступ запрещён")
+    tank = db.get(Tank, tank_id)
+    if not tank:
+        raise HTTPException(404, "Танк не найден")
+    if "name" in req:
+        # Проверяем, что новое имя не занято другим танком
+        existing = db.query(Tank).filter(Tank.name == req["name"], Tank.id != tank_id).first()
+        if existing:
+            raise HTTPException(400, "Танк с таким названием уже существует")
+        tank.name = req["name"]
+    if "price" in req:
+        tank.price = req["price"]
+    if "rank" in req:
+        tank.rank = req["rank"]
+    if "br" in req:
+        tank.br = req["br"]
+    if "t_type" in req:
+        tank.t_type = req["t_type"]
+    db.commit()
+    return {"ok": True}
+
+@app.delete("/admin/tanks/{tank_id}")
+def admin_delete_tank(
+    tank_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if not current_user.is_admin:
+        raise HTTPException(403, "Доступ запрещён")
+    tank = db.get(Tank, tank_id)
+    if not tank:
+        raise HTTPException(404, "Танк не найден")
+    # Проверяем, используется ли танк в каких-либо таблицах
+    # SchoolTank
+    in_school = db.query(SchoolTank).filter(SchoolTank.tank_id == tank_id).first()
+    if in_school:
+        raise HTTPException(400, "Танк есть в инвентаре школ, удаление невозможно")
+    # match_tanks
+    in_match = db.query(match_tanks).where(match_tanks.c.tank_id == tank_id).first()
+    if in_match:
+        raise HTTPException(400, "Танк участвовал в матчах, удаление невозможно")
+    # ManufacturerTank
+    in_manufacturer = db.query(ManufacturerTank).filter(ManufacturerTank.tank_id == tank_id).first()
+    if in_manufacturer:
+        raise HTTPException(400, "Танк есть в списке производителя какой-то школы, удалите его сначала оттуда")
+    # ImportTank
+    in_import = db.query(ImportTank).filter(ImportTank.tank_id == tank_id).first()
+    if in_import:
+        raise HTTPException(400, "Танк используется в импортах, удаление невозможно")
+    # TankUpgrade
+    in_upgrade = db.query(TankUpgrade).filter(
+        (TankUpgrade.from_tank_id == tank_id) | (TankUpgrade.to_tank_id == tank_id)
+    ).first()
+    if in_upgrade:
+        raise HTTPException(400, "Танк задействован в дереве улучшений, удаление невозможно")
+    db.delete(tank)
+    db.commit()
+    return {"ok": True}
+
+@app.get("/admin/schools/{school_id}/manufacturer")
+def admin_get_manufacturer(
+    school_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if not current_user.is_admin:
+        raise HTTPException(403, "Доступ запрещён")
+    school = db.get(School, school_id)
+    if not school:
+        raise HTTPException(404, "Школа не найдена")
+    tanks = []
+    for mt in school.manufacturer_tanks:
+        tanks.append({
+            "id": mt.tank.id,
+            "name": mt.tank.name,
+            "price": mt.tank.price,
+            "rank": mt.tank.rank,
+            "br": mt.tank.br,
+            "t_type": mt.tank.t_type
+        })
+    return tanks
+
+@app.post("/admin/schools/{school_id}/manufacturer")
+def admin_add_manufacturer_tank(
+    school_id: int,
+    req: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if not current_user.is_admin:
+        raise HTTPException(403, "Доступ запрещён")
+    tank_id = req.get("tank_id")
+    if not tank_id:
+        raise HTTPException(400, "Не указан tank_id")
+    school = db.get(School, school_id)
+    if not school:
+        raise HTTPException(404, "Школа не найдена")
+    tank = db.get(Tank, tank_id)
+    if not tank:
+        raise HTTPException(404, "Танк не найден")
+    exists = db.query(ManufacturerTank).filter_by(school_id=school_id, tank_id=tank_id).first()
+    if exists:
+        raise HTTPException(400, "Танк уже есть в производителе")
+    db.add(ManufacturerTank(school_id=school_id, tank_id=tank_id))
+    db.commit()
+    return {"ok": True}
+
+@app.delete("/admin/schools/{school_id}/manufacturer/{tank_id}")
+def admin_remove_manufacturer_tank(
+    school_id: int,
+    tank_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if not current_user.is_admin:
+        raise HTTPException(403, "Доступ запрещён")
+    record = db.query(ManufacturerTank).filter_by(school_id=school_id, tank_id=tank_id).first()
+    if not record:
+        raise HTTPException(404, "Танк не найден в производителе")
+    db.delete(record)
+    db.commit()
+    return {"ok": True}
 
 def send_match_message(match: Match, db: Session) -> str | None:
     """Формирует и отправляет сообщение о матче в Discord, возвращает ID сообщения."""
