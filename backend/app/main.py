@@ -29,6 +29,8 @@ from app.schemas import (
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from threading import Lock
+from collections import defaultdict
 
 MSK = pytz.timezone('Europe/Moscow')
 load_dotenv()
@@ -343,48 +345,52 @@ def buy_tanks(
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user)
 ):
-    school = db.get(School, request.school_id)
-    if not school:
-        raise HTTPException(404, "School not found")
+    lock = get_school_lock(request.school_id)
+    with lock:
+        # --- ВСЯ СУЩЕСТВУЮЩАЯ ЛОГИКА ПОКУПКИ (без изменений) ---
+        school = db.get(School, request.school_id)
+        if not school:
+            raise HTTPException(404, "School not found")
 
-    # Проверка прав: админ, командир или зам этой школы
-    has_right = current_user.is_admin or any(
-        r.school_id == request.school_id and r.role in ["commander", "deputy"]
-        for r in current_user.roles
-    )
-    if not has_right:
-        raise HTTPException(403, "Недостаточно прав для покупки танков для этой школы")
+        # Проверка прав (как у вас)
+        has_right = current_user.is_admin or any(
+            r.school_id == request.school_id and r.role in ["commander", "deputy"]
+            for r in current_user.roles
+        )
+        if not has_right:
+            raise HTTPException(403, "Недостаточно прав")
 
-    total_cost = 0
-    items_to_buy = []
-    for item in request.items:
-        tank = db.get(Tank, item.tank_id)
-        if not tank:
-            raise HTTPException(404, f"Tank {item.tank_id} not found")
-        total_cost += tank.price * item.quantity
-        items_to_buy.append((tank, item.quantity))
-    if school.balance < total_cost:
-        raise HTTPException(400, "Not enough balance")
-    school.balance -= total_cost
-    for tank, qty in items_to_buy:
-        existing = db.query(SchoolTank).filter_by(school_id=school.id, tank_id=tank.id).first()
-        if existing:
-            existing.quantity += qty
-        else:
-            db.add(SchoolTank(school_id=school.id, tank_id=tank.id, quantity=qty))
+        total_cost = 0
+        items_to_buy = []
+        for item in request.items:
+            tank = db.get(Tank, item.tank_id)
+            if not tank:
+                raise HTTPException(404, f"Tank {item.tank_id} not found")
+            total_cost += tank.price * item.quantity
+            items_to_buy.append((tank, item.quantity))
 
-    # Лог с оператором
-    create_transaction_log(
-        db=db,
-        school_id=school.id,
-        amount=-total_cost,
-        operation_type="tank_purchase",
-        description=f"Покупка {sum(item.quantity for item in request.items)} танков",
-        extra_data={"items": [{"tank_id": t.id, "quantity": qty} for t, qty in items_to_buy]},
-        operator_user_id=current_user.id
-    )
-    db.commit()
-    return {"message": "Purchase successful"}
+        if school.balance < total_cost:
+            raise HTTPException(400, "Not enough balance")
+
+        school.balance -= total_cost
+        for tank, qty in items_to_buy:
+            existing = db.query(SchoolTank).filter_by(school_id=school.id, tank_id=tank.id).first()
+            if existing:
+                existing.quantity += qty
+            else:
+                db.add(SchoolTank(school_id=school.id, tank_id=tank.id, quantity=qty))
+
+        create_transaction_log(
+            db=db,
+            school_id=school.id,
+            amount=-total_cost,
+            operation_type="tank_purchase",
+            description=f"Покупка {sum(item.quantity for item in request.items)} танков",
+            extra_data={"items": [{"tank_id": t.id, "quantity": qty} for t, qty in items_to_buy]},
+            operator_user_id=current_user.id
+        )
+        db.commit()
+        return {"message": "Purchase successful"}
 
 
 @app.post("/transfer/")
@@ -393,49 +399,61 @@ def transfer_money(
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user)
 ):
-    from_school = db.get(School, request.from_school_id)
-    to_school = db.get(School, request.to_school_id)
-    if not from_school or not to_school:
-        raise HTTPException(404, "School not found")
-    if from_school.id == to_school.id:
-        raise HTTPException(400, "Cannot transfer to the same school")
-    if request.amount <= 0:
-        raise HTTPException(400, "Amount must be positive")
-    if request.amount > from_school.balance:
-        raise HTTPException(400, "Insufficient funds")
-    received_amount = int(request.amount * (1 - TAX))
-    from_school.balance -= request.amount
-    to_school.balance += received_amount
+    # Блокируем обе школы (сначала отправителя, потом получателя – порядок важен)
+    lock_from = get_school_lock(request.from_school_id)
+    lock_to = get_school_lock(request.to_school_id)
 
-    create_transaction_log(
-        db=db,
-        school_id=from_school.id,
-        amount=-request.amount,
-        operation_type="transfer_sent",
-        description=f"Перевод в школу {to_school.name}",
-        reference_id=to_school.id,
-        reference_type="school",
-        extra_data={"to_school_id": to_school.id, "tax": TAX, "received": received_amount},
-        operator_user_id=current_user.id
-    )
-    create_transaction_log(
-        db=db,
-        school_id=to_school.id,
-        amount=received_amount,
-        operation_type="transfer_received",
-        description=f"Перевод от школы {from_school.name}",
-        reference_id=from_school.id,
-        reference_type="school",
-        extra_data={"from_school_id": from_school.id, "tax": TAX, "sent": request.amount},
-        operator_user_id=current_user.id
-    )
-    db.commit()
-    return {
-        "from_school": {"id": from_school.id, "balance": from_school.balance},
-        "to_school": {"id": to_school.id, "balance": to_school.balance},
-        "sent": request.amount,
-        "received": received_amount
-    }
+    # Чтобы избежать взаимоблокировки (deadlock), всегда берём блокировки в одном порядке
+    # Например, по возрастанию ID школы
+    first_lock = lock_from if request.from_school_id < request.to_school_id else lock_to
+    second_lock = lock_to if request.from_school_id < request.to_school_id else lock_from
+
+    with first_lock:
+        with second_lock:
+            from_school = db.get(School, request.from_school_id)
+            to_school = db.get(School, request.to_school_id)
+            if not from_school or not to_school:
+                raise HTTPException(404, "School not found")
+            if from_school.id == to_school.id:
+                raise HTTPException(400, "Cannot transfer to the same school")
+            if request.amount <= 0:
+                raise HTTPException(400, "Amount must be positive")
+            if request.amount > from_school.balance:
+                raise HTTPException(400, "Insufficient funds")
+
+            received_amount = int(request.amount * (1 - TAX))
+            from_school.balance -= request.amount
+            to_school.balance += received_amount
+
+            create_transaction_log(
+                db=db,
+                school_id=from_school.id,
+                amount=-request.amount,
+                operation_type="transfer_sent",
+                description=f"Перевод в школу {to_school.name}",
+                reference_id=to_school.id,
+                reference_type="school",
+                extra_data={"to_school_id": to_school.id, "tax": TAX, "received": received_amount},
+                operator_user_id=current_user.id
+            )
+            create_transaction_log(
+                db=db,
+                school_id=to_school.id,
+                amount=received_amount,
+                operation_type="transfer_received",
+                description=f"Перевод от школы {from_school.name}",
+                reference_id=from_school.id,
+                reference_type="school",
+                extra_data={"from_school_id": from_school.id, "tax": TAX, "sent": request.amount},
+                operator_user_id=current_user.id
+            )
+            db.commit()
+            return {
+                "from_school": {"id": from_school.id, "balance": from_school.balance},
+                "to_school": {"id": to_school.id, "balance": to_school.balance},
+                "sent": request.amount,
+                "received": received_amount
+            }
 
 # ------------------------
 # API: Матчи (с мягким удалением)
@@ -1071,48 +1089,53 @@ def sell_tank(
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user)
 ):
-    tank_id = req.get("tank_id")
-    if not tank_id:
-        raise HTTPException(400, "Не указан tank_id")
-    school = db.get(School, school_id)
-    if not school:
-        raise HTTPException(404, "Школа не найдена")
+    lock = get_school_lock(school_id)
+    with lock:
+        tank_id = req.get("tank_id")
+        if not tank_id:
+            raise HTTPException(400, "Не указан tank_id")
 
-    # Проверка прав
-    has_right = current_user.is_admin or any(
-        r.school_id == school_id and r.role in ["commander", "deputy"]
-        for r in current_user.roles
-    )
-    if not has_right:
-        raise HTTPException(403, "Недостаточно прав")
+        school = db.get(School, school_id)
+        if not school:
+            raise HTTPException(404, "Школа не найдена")
 
-    school_tank = db.query(SchoolTank).filter(
-        SchoolTank.school_id == school_id,
-        SchoolTank.tank_id == tank_id
-    ).first()
-    if not school_tank or school_tank.quantity < 1:
-        raise HTTPException(400, "У школы нет такого танка")
-    tank = db.get(Tank, tank_id)
-    if not tank:
-        raise HTTPException(404, "Танк не найден")
-    sell_price = int(tank.price * 0.6)
-    if school_tank.quantity > 1:
-        school_tank.quantity -= 1
-    else:
-        db.delete(school_tank)
-    school.balance += sell_price
-    create_transaction_log(
-        db=db,
-        school_id=school.id,
-        amount=sell_price,
-        operation_type="tank_sale",
-        description=f"Продажа {tank.name}",
-        extra_data={"tank_id": tank.id, "tank_name": tank.name},
-        operator_user_id=current_user.id
-    )
-    db.commit()
-    return {"ok": True, "new_balance": school.balance, "sold_price": sell_price}
+        has_right = current_user.is_admin or any(
+            r.school_id == school_id and r.role in ["commander", "deputy"]
+            for r in current_user.roles
+        )
+        if not has_right:
+            raise HTTPException(403, "Недостаточно прав")
 
+        school_tank = db.query(SchoolTank).filter(
+            SchoolTank.school_id == school_id,
+            SchoolTank.tank_id == tank_id
+        ).first()
+        if not school_tank or school_tank.quantity < 1:
+            raise HTTPException(400, "У школы нет такого танка")
+
+        tank = db.get(Tank, tank_id)
+        if not tank:
+            raise HTTPException(404, "Танк не найден")
+
+        sell_price = int(tank.price * 0.6)
+        if school_tank.quantity > 1:
+            school_tank.quantity -= 1
+        else:
+            db.delete(school_tank)
+
+        school.balance += sell_price
+
+        create_transaction_log(
+            db=db,
+            school_id=school.id,
+            amount=sell_price,
+            operation_type="tank_sale",
+            description=f"Продажа {tank.name}",
+            extra_data={"tank_id": tank.id, "tank_name": tank.name},
+            operator_user_id=current_user.id
+        )
+        db.commit()
+        return {"ok": True, "new_balance": school.balance, "sold_price": sell_price}
 
 @app.post("/schools/{school_id}/upgrade_tank")
 def upgrade_tank(
@@ -2441,3 +2464,8 @@ def cancel_import_application(
     db.delete(application)
     db.commit()
     return {"ok": True, "message": "Заявка отозвана"}
+
+_school_locks = defaultdict(Lock)
+
+def get_school_lock(school_id: int) -> Lock:
+    return _school_locks[school_id]
