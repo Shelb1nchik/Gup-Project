@@ -320,7 +320,7 @@ def get_school(school_id: int, db: Session = Depends(get_db)):
 @app.get("/tanks/")
 def get_tanks(db: Session = Depends(get_db)):
     tanks = db.query(Tank).all()
-    return [{"id": t.id, "name": t.name, "price": t.price, "rank": t.rank, "type": t.t_type, "br": t.br} for t in tanks]
+    return [{"id": t.id, "name": t.name, "price": t.price, "rank": t.rank, "type": t.t_type, "br": t.br, "nation": t.nation} for t in tanks]
 
 @app.get("/tanks/manufacturer/{school_id}")
 def get_manufacturer(school_id: int, db: Session = Depends(get_db)):
@@ -334,7 +334,8 @@ def get_manufacturer(school_id: int, db: Session = Depends(get_db)):
             "price": mt.tank.price,
             "rank": mt.tank.rank,
             "br": mt.tank.br,
-            "type": mt.tank.t_type
+            "type": mt.tank.t_type,
+            "nation": mt.tank.nation   # добавлено
         } for mt in school.manufacturer_tanks
     ]
 
@@ -399,12 +400,19 @@ def transfer_money(
         db: Session = Depends(get_db),
         current_user: User = Depends(get_current_user)
 ):
-    # Блокируем обе школы (сначала отправителя, потом получателя – порядок важен)
+    # Проверка прав: пользователь должен иметь право на отправку из from_school
+    if not current_user.is_admin:
+        has_right_from = any(
+            r.school_id == request.from_school_id and r.role in ["commander", "deputy"]
+            for r in current_user.roles
+        )
+        if not has_right_from:
+            raise HTTPException(403, "У вас нет прав на перевод денег из этой школы")
+
+    # Блокируем обе школы (порядок по ID, чтобы избежать deadlock)
     lock_from = get_school_lock(request.from_school_id)
     lock_to = get_school_lock(request.to_school_id)
 
-    # Чтобы избежать взаимоблокировки (deadlock), всегда берём блокировки в одном порядке
-    # Например, по возрастанию ID школы
     first_lock = lock_from if request.from_school_id < request.to_school_id else lock_to
     second_lock = lock_to if request.from_school_id < request.to_school_id else lock_from
 
@@ -1871,10 +1879,15 @@ async def upload_school_background(
         f.write(contents)
 
     # Удаляем старый фон, если есть
+    # Удаляем старый фон, если есть
     if school.background_path:
         old_path = os.path.join(FRONTEND_DIR, school.background_path.lstrip("/frontend/"))
         if os.path.exists(old_path):
-            os.remove(old_path)
+            try:
+                os.remove(old_path)
+            except PermissionError:
+                # Файл занят, просто пропускаем удаление
+                print(f"Не удалось удалить старый файл фона: {old_path} (файл занят)")
 
     relative_path = f"/frontend/uploads/backgrounds/{filename}"
     school.background_path = relative_path
@@ -2019,14 +2032,18 @@ def admin_get_tanks(db: Session = Depends(get_db), current_user: User = Depends(
     if not current_user.is_admin:
         raise HTTPException(403, "Доступ запрещён")
     tanks = db.query(Tank).order_by(Tank.id).all()
-    return [{"id": t.id, "name": t.name, "price": t.price, "rank": t.rank, "br": t.br, "t_type": t.t_type} for t in tanks]
+    return [{
+        "id": t.id,
+        "name": t.name,
+        "price": t.price,
+        "rank": t.rank,
+        "br": t.br,
+        "t_type": t.t_type,
+        "nation": t.nation   # <-- добавить эту строку
+    } for t in tanks]
 
 @app.post("/admin/tanks/")
-def admin_create_tank(
-    req: dict,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
+def admin_create_tank(req: dict, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     if not current_user.is_admin:
         raise HTTPException(403, "Доступ запрещён")
     name = req.get("name")
@@ -2034,31 +2051,26 @@ def admin_create_tank(
     rank = req.get("rank", 1)
     br = req.get("br", 0.0)
     t_type = req.get("t_type", "-")
+    nation = req.get("nation")
     if not name or price is None:
         raise HTTPException(400, "Не указано название или цена")
     existing = db.query(Tank).filter(Tank.name == name).first()
     if existing:
         raise HTTPException(400, "Танк с таким названием уже существует")
-    tank = Tank(name=name, price=price, rank=rank, br=br, t_type=t_type)
+    tank = Tank(name=name, price=price, rank=rank, br=br, t_type=t_type, nation=nation)
     db.add(tank)
     db.commit()
     db.refresh(tank)
-    return {"id": tank.id, "name": tank.name, "price": tank.price, "rank": tank.rank, "br": tank.br, "t_type": tank.t_type}
+    return {"id": tank.id, "name": tank.name, "price": tank.price, "rank": tank.rank, "br": tank.br, "t_type": tank.t_type, "nation": tank.nation}
 
 @app.put("/admin/tanks/{tank_id}")
-def admin_update_tank(
-    tank_id: int,
-    req: dict,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
+def admin_update_tank(tank_id: int, req: dict, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     if not current_user.is_admin:
         raise HTTPException(403, "Доступ запрещён")
     tank = db.get(Tank, tank_id)
     if not tank:
         raise HTTPException(404, "Танк не найден")
     if "name" in req:
-        # Проверяем, что новое имя не занято другим танком
         existing = db.query(Tank).filter(Tank.name == req["name"], Tank.id != tank_id).first()
         if existing:
             raise HTTPException(400, "Танк с таким названием уже существует")
@@ -2071,6 +2083,8 @@ def admin_update_tank(
         tank.br = req["br"]
     if "t_type" in req:
         tank.t_type = req["t_type"]
+    if "nation" in req:
+        tank.nation = req["nation"]
     db.commit()
     return {"ok": True}
 

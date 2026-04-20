@@ -45,7 +45,6 @@ tanks = [
     {"name":"БТ-7", "price":49000, "t_type":"ЛТ", "rank":1, "br":1.3},
     {"name":"Т-28 (1938)", "price":87500, "t_type":"СТ", "rank":1, "br":1.3},
     {"name":"Т-35", "price":37500, "t_type":"ТТ", "rank":1, "br":1.3},
-    {"name":"РБТ-5", "price":37500, "t_type":"ЛТ", "rank":1, "br":1.3},
     {"name":"Т-26Э", "price":37500, "t_type":"ЛТ", "rank":1, "br":1.3},
     {"name":"Chi-Ha", "price":62500, "t_type":"СТ", "rank":1, "br":1.3},
     {"name":"Ro-Go", "price":56000, "t_type":"ТТ", "rank":1, "br":1.3},
@@ -137,7 +136,7 @@ tanks = [
     {"name":"Pz.III M", "price":113000, "t_type":"СТ", "rank":2, "br":3.3},
     {"name":"StuG III F", "price":156000, "t_type":"ПТ", "rank":2, "br":2.0},
     {"name":"Т-34 (1940)", "price":213000, "t_type":"СТ", "rank":2, "br":2.0},
-    {"name":"МК-2 \"Матильда\"", "price":138000, "t_type":"СТ", "rank":2, "br":2.0},
+    {"name":"✩МК-2 \"Матильда\"", "price":138000, "t_type":"СТ", "rank":2, "br":2.0},
     {"name":"Cromwell V", "price":213000, "t_type":"СТ", "rank":2, "br":2.0},
     {"name":"Churchill I", "price":87500, "t_type":"ТТ", "rank":1, "br":2.0},
     {"name":"БТ-7А (Ф-32)", "price":163000, "t_type":"ЛТ", "rank":2, "br":3.3},
@@ -226,7 +225,7 @@ tanks = [
     {"name":"M4A3E2", "price":419000, "t_type":"СТ", "rank":3, "br":5.3},
     {"name":"M36 (cn)", "price":313000, "t_type":"ПТ", "rank":3, "br":5.3},
     {"name":"M4A2 (76) W", "price":303000, "t_type":"СТ", "rank":3, "br":5.3},
-    {"name":"M4A2 (76) W USSR", "price":315000, "t_type":"СТ", "rank":3, "br":5.3},
+    {"name":"✩M4A2 (76)", "price":315000, "t_type":"СТ", "rank":3, "br":5.3},
     {"name":"M4A3 (76) W", "price":315000, "t_type":"СТ", "rank":3, "br":5.3},
     {"name":"M4A3 (76) \"Hell\"", "price":435000, "t_type":"СТ", "rank":3, "br":5.3},
     {"name":"ИС-1(45)", "price":475000, "t_type":"ТТ", "rank":3, "br":5.3},
@@ -312,4 +311,61 @@ tanks = [
     {"name":"Maus", "price":1000000, "t_type":"ТТ", "rank":5, "br":7.7},
     {"name":"ИС-6", "price":1000000, "t_type":"ТТ", "rank":5, "br":7.7},
     {"name":"T32", "price":1000000, "t_type":"ТТ", "rank":5, "br":7.7},
+
+
+    {"name":"M18 Hellcat", "price":350000, "t_type":"ПТ", "rank":3, "br":5.7, "nation":"US"},
+    {"name":"M56 Scorpion", "price":420000, "t_type":"ПТ", "rank":4, "br":6.3, "nation":"US"},
+    {"name":"T49", "price":390000, "t_type":"ПТ", "rank":3, "br":6.0, "nation":"US"},
+    {"name":"Nashorn", "price":280000, "t_type":"ПТ", "rank":3, "br":5.0, "nation":"DE"},
+    {"name":"Dicker Max", "price":220000, "t_type":"ПТ", "rank":2, "br":4.3, "nation":"DE"},
+    {"name":"Sturer Emil", "price":310000, "t_type":"ПТ", "rank":3, "br":5.7, "nation":"DE"},
+    {"name":"Waffenträger", "price":480000, "t_type":"ПТ", "rank":4, "br":6.7, "nation":"DE"},
+    {"name":"Rhm.-Borsig Waffenträger", "price":520000, "t_type":"ПТ", "rank":4, "br":7.0, "nation":"DE"},
+    # СССР
+    {"name":"SU-76M", "price":80000, "t_type":"ПТ", "rank":2, "br":2.7, "nation":"USSR"},
+    {"name":"SU-100P", "price":350000, "t_type":"ПТ", "rank":3, "br":6.0, "nation":"USSR"},
+    {"name":"SU-152 (открытая)", "price":320000, "t_type":"ПТ", "rank":3, "br":5.3, "nation":"USSR"},
+    {"name":"Object 120 (Taran)", "price":680000, "t_type":"ПТ", "rank":5, "br":8.0, "nation":"USSR"},
+    {"name": "PT-76", "price": 280000, "t_type": "ЛТ", "rank": 3, "br": 5.0, "nation": "USSR"},
+    {"name": "PT-76B", "price": 300000, "t_type": "ЛТ", "rank": 3, "br": 5.3, "nation": "USSR"},
+    {"name": "АСУ-57", "price": 300000, "t_type": "ПТ", "rank": 3, "br": 4.3, "nation": "USSR"},
+    {"name": "✩T-III", "price": 300000, "t_type": "СТ", "rank": 1, "br": 2.3, "nation": "USSR"},
+    {"name": "СУ-76М", "price": 300000, "t_type": "СТ", "rank": 2, "br": 2.0, "nation": "USSR"},
+    {"name": "✩М-3 Средний", "price": 300000, "t_type": "СТ", "rank": 2, "br": 2.7, "nation": "USSR"},
+    {"name": "СУ-85А", "price": 300000, "t_type": "СТ", "rank": 2, "br": 4.0, "nation": "USSR"},
+    {"name": "Т-34-85 \"Партизан\"", "price": 300000, "t_type": "СТ", "rank": 3, "br": 5.7, "nation": "USSR"},
+    {"name": "✩T-V", "price": 300000, "t_type": "СТ", "rank": 4, "br": 6.0, "nation": "USSR"},
+    {"name": "АСУ-85", "price": 350000, "t_type": "ПТ", "rank": 3, "br": 6.3, "nation": "USSR"},
+    # Великобритания
+    {"name":"Archer", "price":130000, "t_type":"ПТ", "rank":2, "br":3.0, "nation":"UK"},  # уже есть Archer, но возможно с открытой рубкой
+    {"name":"Achilles", "price":160000, "t_type":"ПТ", "rank":2, "br":3.7, "nation":"UK"},
+    {"name":"FV4005 Stage II", "price":720000, "t_type":"ПТ", "rank":5, "br":7.7, "nation":"UK"},
+    # Франция
+    {"name":"AMX-13 (открытая)", "price":300000, "t_type":"ПТ", "rank":3, "br":5.3, "nation":"FR"},  # легкий танк, но есть вариант ПТ-САУ
+    {"name":"CA Lorraine", "price":350000, "t_type":"ПТ", "rank":3, "br":6.0, "nation":"FR"},
+    {"name":"AMX 50 Foch (открытая)", "price":550000, "t_type":"ПТ", "rank":4, "br":7.0, "nation":"FR"},
+    # Швеция
+    {"name":"Sav m/43 (1946)", "price":180000, "t_type":"ПТ", "rank":2, "br":4.0, "nation":"SE"},  # модификация с открытой рубкой
+    {"name":"Pvkv m/43", "price":200000, "t_type":"ПТ", "rank":2, "br":4.3, "nation":"SE"},
+    # Италия
+    {"name":"Semovente 90/53", "price":240000, "t_type":"ПТ", "rank":3, "br":4.7, "nation":"IT"},
+    # Япония
+    {"name":"Ho-Ni I", "price":90000, "t_type":"ПТ", "rank":1, "br":2.3, "nation":"JP"},
+    {"name":"Ho-Ni III", "price":110000, "t_type":"ПТ", "rank":2, "br":3.0, "nation":"JP"},
+    # США
+    {"name":"M41A1", "price":360000, "t_type":"ЛТ", "rank":3, "br":6.0, "nation":"US"},
+    # Германия
+    {"name":"leKPz M41 (DE)", "price":370000, "t_type":"ЛТ", "rank":3, "br":6.0, "nation":"DE"},
+    # СССР
+    # Великобритания
+    # Франция
+    {"name":"AMX-13", "price":320000, "t_type":"ЛТ", "rank":3, "br":5.7, "nation":"FR"},
+    # Швеция
+    {"name":"Type 62", "price":290000, "t_type":"ЛТ", "rank":3, "br":5.7, "nation":"JP"},
+    {"name":"Type 64", "price":330000, "t_type":"ЛТ", "rank":3, "br":6.0, "nation":"JP"},
+
+    {"name":"M26 (FR)", "price":480000, "t_type":"СТ", "rank":3, "br":6.0, "nation":"FR"},
+    {"name":"M26A1", "price":470000, "t_type":"СТ", "rank":3, "br":6.0, "nation":"IT"},
+
+    {"name":"Panther (FR)", "price":420000, "t_type":"СТ", "rank":3, "br":5.7, "nation":"FR"},
 ]

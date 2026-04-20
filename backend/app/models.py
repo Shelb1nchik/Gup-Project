@@ -55,6 +55,7 @@ class Tank(Base):
     price = Column(Integer)
     rank = Column(Integer)
     t_type = Column(String)
+    nation = Column(String, nullable=True, default=None)
 
     manufacturer_schools = relationship("ManufacturerTank", back_populates="tank")
     school_tanks = relationship("SchoolTank", back_populates="tank")

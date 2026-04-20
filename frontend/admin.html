@@ -495,11 +495,12 @@ td button {
     <div id="tanksSection" class="section" style="display: none;">
         <h2>🛸 Список всех танков</h2>
         <div class="form-group" style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <input type="text" id="newTankName" placeholder="Название" style="flex:2">
-            <input type="number" id="newTankPrice" placeholder="Цена" style="flex:1">
-            <input type="number" id="newTankBr" placeholder="БР" step="0.1" style="flex:1">
-            <input type="number" id="newTankRank" placeholder="Ранг" style="flex:1">
-            <input type="text" id="newTankType" placeholder="Тип (СТ/ТТ/ЛТ/ПТ)" style="flex:1">
+            <input type="text" id="newTankName" placeholder="Название *" style="flex:2" required>
+            <input type="number" id="newTankPrice" placeholder="Цена *" style="flex:1" required>
+            <input type="number" id="newTankBr" placeholder="БР *" step="0.1" style="flex:1" required>
+            <input type="number" id="newTankRank" placeholder="Ранг *" style="flex:1" required>
+            <input type="text" id="newTankType" placeholder="Тип * (СТ/ТТ/ЛТ/ПТ)" style="flex:1" required>
+            <input type="text" id="newTankNation" placeholder="Нация * (USSR/DE/US/UK/...)" style="flex:1" required>
             <button id="createTankBtn">➕ Добавить</button>
         </div>
         <!-- Фильтры -->
@@ -511,6 +512,7 @@ td button {
             <div class="filter-item"><label>Ранг:</label><input type="number" id="filterRank" placeholder="Ранг"></div>
             <div class="filter-item"><label>Цена от:</label><input type="number" id="filterPriceMin" placeholder="0"></div>
             <div class="filter-item"><label>Цена до:</label><input type="number" id="filterPriceMax" placeholder="1000000"></div>
+            <div class="filter-item"><label>Нация:</label><input type="text" id="filterNation" placeholder="USSR, DE, US..."></div>
             <button id="resetFiltersBtn">Сбросить</button>
         </div>
         <div style="overflow-x: auto;">
@@ -523,6 +525,7 @@ td button {
                         <th data-sort="br">БР</th>
                         <th data-sort="rank">Ранг</th>
                         <th data-sort="t_type">Тип</th>
+                        <th data-sort="nation">Нация</th>
                         <th>Действия</th>
                     </tr>
                 </thead>
@@ -981,6 +984,8 @@ function renderTanksTable() {
     const rankFilter = parseInt(document.getElementById("filterRank").value);
     const priceMin = parseInt(document.getElementById("filterPriceMin").value);
     const priceMax = parseInt(document.getElementById("filterPriceMax").value);
+    const nationFilter = document.getElementById("filterNation").value.trim().toUpperCase();
+if (nationFilter) filtered = filtered.filter(t => (t.nation || "").toUpperCase().includes(nationFilter));
     if (nameFilter) filtered = filtered.filter(t => t.name.toLowerCase().includes(nameFilter));
     if (typeFilter) filtered = filtered.filter(t => t.t_type === typeFilter);
     if (!isNaN(brMin)) filtered = filtered.filter(t => t.br >= brMin);
@@ -1007,6 +1012,7 @@ function renderTanksTable() {
             <td><input type="number" step="0.1" class="edit-br" value="${t.br}"></td>
             <td><input type="number" class="edit-rank" value="${t.rank}"></td>
             <td><input type="text" class="edit-type" value="${escapeHtml(t.t_type)}"></td>
+            <td><input type="text" class="edit-nation" value="${escapeHtml(t.nation || '')}"></td>
             <td><button class="save-tank-btn" data-id="${t.id}">💾 Сохранить</button> <button class="delete-tank-btn" data-id="${t.id}">🗑️ Удалить</button></td>
         `;
         tbody.appendChild(tr);
@@ -1018,12 +1024,24 @@ function attachTankButtons() {
         btn.onclick = async () => {
             const id = btn.dataset.id;
             const row = btn.closest("tr");
-            const name = row.querySelector(".edit-name").value;
+            const name = row.querySelector(".edit-name").value.trim();
             const price = parseInt(row.querySelector(".edit-price").value);
             const br = parseFloat(row.querySelector(".edit-br").value);
             const rank = parseInt(row.querySelector(".edit-rank").value);
-            const t_type = row.querySelector(".edit-type").value;
-            const res = await authFetch(`${api}/admin/tanks/${id}`, { method: "PUT", body: JSON.stringify({ name, price, br, rank, t_type }) });
+            const t_type = row.querySelector(".edit-type").value.trim();
+            const nation = row.querySelector(".edit-nation").value.trim();
+
+            if (!name) { alert("Название не может быть пустым"); return; }
+            if (isNaN(price)) { alert("Цена должна быть числом"); return; }
+            if (isNaN(br)) { alert("БР должен быть числом"); return; }
+            if (isNaN(rank)) { alert("Ранг должен быть числом"); return; }
+            if (!t_type) { alert("Тип не может быть пустым"); return; }
+            if (!nation) { alert("Нация не может быть пустой"); return; }
+
+            const res = await authFetch(`${api}/admin/tanks/${id}`, {
+                method: "PUT",
+                body: JSON.stringify({ name, price, br, rank, t_type, nation })
+            });
             if (res.ok) alert("Сохранено");
             else { const err = await res.json(); alert("Ошибка: " + (err.detail || "")); }
         };
@@ -1039,15 +1057,38 @@ function attachTankButtons() {
     });
 }
 document.getElementById("createTankBtn").onclick = async () => {
-    const name = document.getElementById("newTankName").value;
+    const name = document.getElementById("newTankName").value.trim();
     const price = parseInt(document.getElementById("newTankPrice").value);
     const br = parseFloat(document.getElementById("newTankBr").value);
     const rank = parseInt(document.getElementById("newTankRank").value);
-    const t_type = document.getElementById("newTankType").value;
-    if (!name || isNaN(price)) return alert("Заполните название и цену");
-    const res = await authFetch(`${api}/admin/tanks/`, { method: "POST", body: JSON.stringify({ name, price, br, rank, t_type }) });
-    if (res.ok) { alert("Танк создан"); loadTanksAdmin(); document.getElementById("newTankName").value = ""; document.getElementById("newTankPrice").value = ""; document.getElementById("newTankBr").value = ""; document.getElementById("newTankRank").value = ""; document.getElementById("newTankType").value = ""; }
-    else { const err = await res.json(); alert("Ошибка: " + (err.detail || "")); }
+    const t_type = document.getElementById("newTankType").value.trim();
+    const nation = document.getElementById("newTankNation").value.trim();
+
+    if (!name) return alert("Укажите название");
+    if (isNaN(price)) return alert("Укажите цену");
+    if (isNaN(br)) return alert("Укажите БР");
+    if (isNaN(rank)) return alert("Укажите ранг");
+    if (!t_type) return alert("Укажите тип (СТ/ТТ/ЛТ/ПТ)");
+    if (!nation) return alert("Укажите нацию");
+
+    const res = await authFetch(`${api}/admin/tanks/`, {
+        method: "POST",
+        body: JSON.stringify({ name, price, br, rank, t_type, nation })
+    });
+    if (res.ok) {
+        alert("Танк создан");
+        loadTanksAdmin();
+        // Очистить поля
+        document.getElementById("newTankName").value = "";
+        document.getElementById("newTankPrice").value = "";
+        document.getElementById("newTankBr").value = "";
+        document.getElementById("newTankRank").value = "";
+        document.getElementById("newTankType").value = "";
+        document.getElementById("newTankNation").value = "";
+    } else {
+        const err = await res.json();
+        alert("Ошибка: " + (err.detail || ""));
+    }
 };
 // Обработчики фильтров и сортировки
 document.getElementById("filterName").addEventListener("input", () => renderTanksTable());
