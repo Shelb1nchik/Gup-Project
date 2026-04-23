@@ -217,7 +217,7 @@ def seed():
             for school_name, tank_names in school_map.items():
                 school = db.query(School).filter_by(name=school_name.strip()).first()
                 if not school:
-                    print(f"❌ Школа не найдена: '{school_name}'")
+                    print(f"❌ Страна не найдена: '{school_name}'")
                     continue
                 for tank_name in tank_names:
                     tank = db.query(Tank).filter(Tank.name == tank_name.strip()).first()
@@ -291,7 +291,7 @@ def get_schools(db: Session = Depends(get_db)):
 def get_school(school_id: int, db: Session = Depends(get_db)):
     school = db.get(School, school_id)
     if not school:
-        raise HTTPException(404, "School not found")
+        raise HTTPException(404, "Страна не найдена")
     tanks = [
         {
             "id": st.tank.id,
@@ -326,7 +326,7 @@ def get_tanks(db: Session = Depends(get_db)):
 def get_manufacturer(school_id: int, db: Session = Depends(get_db)):
     school = db.get(School, school_id)
     if not school:
-        raise HTTPException(404, "School not found")
+        raise HTTPException(404, "Страна не найденп")
     return [
         {
             "id": mt.tank.id,
@@ -351,7 +351,7 @@ def buy_tanks(
         # --- ВСЯ СУЩЕСТВУЮЩАЯ ЛОГИКА ПОКУПКИ (без изменений) ---
         school = db.get(School, request.school_id)
         if not school:
-            raise HTTPException(404, "School not found")
+            raise HTTPException(404, "Страна не найдена")
 
         # Проверка прав (как у вас)
         has_right = current_user.is_admin or any(
@@ -407,7 +407,7 @@ def transfer_money(
             for r in current_user.roles
         )
         if not has_right_from:
-            raise HTTPException(403, "У вас нет прав на перевод денег из этой школы")
+            raise HTTPException(403, "У вас нет прав на перевод денег из этой страны")
 
     # Блокируем обе школы (порядок по ID, чтобы избежать deadlock)
     lock_from = get_school_lock(request.from_school_id)
@@ -421,7 +421,7 @@ def transfer_money(
             from_school = db.get(School, request.from_school_id)
             to_school = db.get(School, request.to_school_id)
             if not from_school or not to_school:
-                raise HTTPException(404, "School not found")
+                raise HTTPException(404, "Страна не найдена")
             if from_school.id == to_school.id:
                 raise HTTPException(400, "Cannot transfer to the same school")
             if request.amount <= 0:
@@ -438,7 +438,7 @@ def transfer_money(
                 school_id=from_school.id,
                 amount=-request.amount,
                 operation_type="transfer_sent",
-                description=f"Перевод в школу {to_school.name}",
+                description=f"Перевод в страну {to_school.name}",
                 reference_id=to_school.id,
                 reference_type="school",
                 extra_data={"to_school_id": to_school.id, "tax": TAX, "received": received_amount},
@@ -449,7 +449,7 @@ def transfer_money(
                 school_id=to_school.id,
                 amount=received_amount,
                 operation_type="transfer_received",
-                description=f"Перевод от школы {from_school.name}",
+                description=f"Перевод от страны {from_school.name}",
                 reference_id=from_school.id,
                 reference_type="school",
                 extra_data={"from_school_id": from_school.id, "tax": TAX, "sent": request.amount},
@@ -972,7 +972,7 @@ def calculate_match_result(match_id: int, db: Session = Depends(get_db), current
             continue
         new_balance = school.balance + amount
         if new_balance < MIN_BALANCE:
-            raise HTTPException(400, f"У школы {school.name} баланс станет {new_balance}, что ниже минимального {MIN_BALANCE}")
+            raise HTTPException(400, f"У страны {school.name} баланс станет {new_balance}, что ниже минимального {MIN_BALANCE}")
         school.balance = new_balance
 
         # Логирование (без изменений)
@@ -1105,7 +1105,7 @@ def sell_tank(
 
         school = db.get(School, school_id)
         if not school:
-            raise HTTPException(404, "Школа не найдена")
+            raise HTTPException(404, "Страна не найдена")
 
         has_right = current_user.is_admin or any(
             r.school_id == school_id and r.role in ["commander", "deputy"]
@@ -1119,7 +1119,7 @@ def sell_tank(
             SchoolTank.tank_id == tank_id
         ).first()
         if not school_tank or school_tank.quantity < 1:
-            raise HTTPException(400, "У школы нет такого танка")
+            raise HTTPException(400, "У страны нет такого танка")
 
         tank = db.get(Tank, tank_id)
         if not tank:
@@ -1167,7 +1167,7 @@ def upgrade_tank(
         for r in current_user.roles
     )
     if not has_right:
-        raise HTTPException(403, "Недостаточно прав для улучшения танка для этой школы")
+        raise HTTPException(403, "Недостаточно прав для улучшения танка для этой страны")
 
     # Построение графа улучшений (как в вашем коде)
     all_upgrades = db.query(TankUpgrade).all()
@@ -1200,14 +1200,14 @@ def upgrade_tank(
 
     school = db.get(School, school_id)
     if not school:
-        raise HTTPException(404, "Школа не найдена")
+        raise HTTPException(404, "Страна не найдена")
 
     school_tank = db.query(SchoolTank).filter(
         SchoolTank.school_id == school_id,
         SchoolTank.tank_id == from_tank_id
     ).first()
     if not school_tank or school_tank.quantity < 1:
-        raise HTTPException(400, "У школы нет такого танка для улучшения")
+        raise HTTPException(400, "У страны нет такого танка для улучшения")
 
     if school.balance < cost:
         raise HTTPException(400, f"Недостаточно средств. Нужно {cost}, доступно {school.balance}")
@@ -1432,7 +1432,7 @@ def run_import_draw(event_id: int):
                 )
                 print(f"[IMPORT DRAW] Школе {school.name} списано {it.price} за танк {it.tank.name}")
             else:
-                print(f"[IMPORT DRAW] У школы {school.name} недостаточно средств: {school.balance} < {it.price}")
+                print(f"[IMPORT DRAW] У страны {school.name} недостаточно средств: {school.balance} < {it.price}")
         event.is_drawn = True
         event.is_active = False
         db.commit()
@@ -1736,7 +1736,7 @@ def apply_for_import_tank(req: dict, db: Session = Depends(get_db), current_user
         ImportApplication.school_id == school_id
     ).count()
     if apps_count >= 2:
-        raise HTTPException(400, "Ваша школа уже подала максимальное количество заявок (2) на этот импорт")
+        raise HTTPException(400, "Ваша страна уже подала максимальное количество заявок (2) на этот импорт")
     school = db.get(School, school_id)
     if not school or school.balance < import_tank.price:
         raise HTTPException(400, f"Недостаточно средств. Нужно {import_tank.price}, доступно {school.balance if school else 0}")
@@ -1811,7 +1811,7 @@ def set_school_background(
 ):
     school = db.get(School, school_id)
     if not school:
-        raise HTTPException(404, "Школа не найдена")
+        raise HTTPException(404, "Страна не найдена")
     has_right = current_user.is_admin or any(
         r.school_id == school_id and r.role in ["commander", "deputy"]
         for r in current_user.roles
@@ -1837,7 +1837,7 @@ async def upload_school_background(
 ):
     school = db.get(School, school_id)
     if not school:
-        raise HTTPException(404, "Школа не найдена")
+        raise HTTPException(404, "Страна не найдена")
 
     has_right = current_user.is_admin or any(
         r.school_id == school_id and r.role in ["commander", "deputy"]
@@ -1908,7 +1908,7 @@ def get_school_logs(
 ):
     school = db.get(School, school_id)
     if not school:
-        raise HTTPException(404, "Школа не найдена")
+        raise HTTPException(404, "Страна не найдена")
     has_right = current_user.is_admin or any(
         r.school_id == school_id and r.role in ["commander", "deputy"]
         for r in current_user.roles
@@ -2111,7 +2111,7 @@ def admin_delete_tank(
     # ManufacturerTank
     in_manufacturer = db.query(ManufacturerTank).filter(ManufacturerTank.tank_id == tank_id).first()
     if in_manufacturer:
-        raise HTTPException(400, "Танк есть в списке производителя какой-то школы, удалите его сначала оттуда")
+        raise HTTPException(400, "Танк есть в списке производителя какой-то страны, удалите его сначала оттуда")
     # ImportTank
     in_import = db.query(ImportTank).filter(ImportTank.tank_id == tank_id).first()
     if in_import:
@@ -2136,7 +2136,7 @@ def admin_get_manufacturer(
         raise HTTPException(403, "Доступ запрещён")
     school = db.get(School, school_id)
     if not school:
-        raise HTTPException(404, "Школа не найдена")
+        raise HTTPException(404, "Страна не найдена")
     tanks = []
     for mt in school.manufacturer_tanks:
         tanks.append({
@@ -2163,7 +2163,7 @@ def admin_add_manufacturer_tank(
         raise HTTPException(400, "Не указан tank_id")
     school = db.get(School, school_id)
     if not school:
-        raise HTTPException(404, "Школа не найдена")
+        raise HTTPException(404, "Страна не найдена")
     tank = db.get(Tank, tank_id)
     if not tank:
         raise HTTPException(404, "Танк не найден")
@@ -2294,7 +2294,9 @@ def generate_match_message(match: Match, db: Session) -> str:
     # Формируем шапку
     team1_mentions = [m for _, m in team1_schools]
     team2_mentions = [m for _, m in team2_schools]
-    header = f"{' vs '.join(team1_mentions)} vs {' vs '.join(team2_mentions)}\n"
+    team1_str = ", ".join(team1_mentions)
+    team2_str = ", ".join(team2_mentions)
+    header = f"{team1_str} vs {team2_str}\n"
     header += f"{date_line}\n"
     header += f"{match.mode} - Bo{match.format}\n"
     header += f"Карты: {match.map_selection or '—'}\n"

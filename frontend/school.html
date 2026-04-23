@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>School | Girls und Panzer</title>
 <style>
-/* ... все ваши стили остаются без изменений ... */
+/* ... все стили остаются без изменений ... */
 * {
     margin: 0;
     padding: 0;
@@ -100,7 +100,7 @@ body {
     transition: all 0.3s;
     position: relative;
 }
-/* ... анимации обводки (оставляем как было) ... */
+/* Анимации обводки (оставлены как были) */
 .glow-pravda { border: 3px solid #ff0000; box-shadow: 0 0 15px #ff0000, 0 0 30px #ff0000; animation: pulseRed 1.5s infinite; }
 @keyframes pulseRed { 0% { border-color: #ff0000; box-shadow: 0 0 5px #ff0000; } 50% { border-color: #ff6666; box-shadow: 0 0 25px #ff0000; } 100% { border-color: #ff0000; box-shadow: 0 0 5px #ff0000; } }
 .glow-ooarai { border: 3px solid #5ca3d7; box-shadow: 0 0 15px #5ca3d7, 0 0 30px #5ca3d7; animation: pulseBlue 1.5s infinite; }
@@ -499,7 +499,7 @@ h3 {
 <button id="openSidebarBtn">☰</button>
 <div id="sideMenu">
     <ul>
-        <li><button id="schoolsBtn">🏫 Школы</button></li>
+        <li><button id="schoolsBtn">🏫 Страны</button></li>
         <li><button id="matchesBtn">📅 Матчи</button></li>
         <li><button id="tanksBtn">🛸 Танки</button></li>
         <li><button id="wheelBtn">🎡 Колесо</button></li>
@@ -557,7 +557,7 @@ h3 {
         <h3>💸 Перевод денег</h3>
         <label>Кому:</label>
         <select id="toSchool"></select>
-        <label>Школа получит:</label>
+        <label>Страна получит:</label>
         <input type="number" id="receivedAmount" value="0" step="100">
         <label>Вы заплатите:</label>
         <input type="number" id="payAmount" value="0" readonly>
@@ -596,7 +596,7 @@ const api = window.location.origin;
 const TAX = 0.2;
 const SELL_PERCENT = 0.6;
 
-// ---------- АВТОРИЗАЦИЯ через cookie (без localStorage) ----------
+// ---------- АВТОРИЗАЦИЯ через cookie ----------
 let currentUser = null;
 let currentUserRoles = [];
 let currentUserIsAdmin = false;
@@ -649,7 +649,6 @@ async function updateAuthUI() {
         logoutBtn.style.display = "none";
         if (adminMenuItem) adminMenuItem.style.display = "none";
     }
-    // Обновляем видимость кнопок управления, если школа уже загружена
     updateActionButtons();
 }
 
@@ -804,7 +803,7 @@ function setBackgroundFromUrl(url) {
     }
 }
 
-// Функция для назначения анимированной обводки
+// Функция анимированной обводки с учётом новых названий наций
 function setGlowBorder(schoolName) {
     const wrapper = document.getElementById('glowContainer');
     wrapper.classList.remove(
@@ -813,21 +812,38 @@ function setGlowBorder(schoolName) {
         'glow-chihatan', 'glow-bellwall', 'glow-jatkosota', 'glow-viggen',
         'glow-yogurt', 'glow-allstars'
     );
+    // Сопоставление новых названий школ (наций) с существующими CSS-классами
     switch (schoolName) {
-        case 'Pravda': wrapper.classList.add('glow-pravda'); break;
-        case 'Ooarai': wrapper.classList.add('glow-ooarai'); break;
-        case 'Kuromorimine': wrapper.classList.add('glow-kuromorimine'); break;
-        case 'Saunders': wrapper.classList.add('glow-saunders'); break;
-        case 'St.Gloriana': wrapper.classList.add('glow-stgloriana'); break;
-        case 'Anzio': wrapper.classList.add('glow-anzio'); break;
-        case 'BC Freedom': wrapper.classList.add('glow-bcfreedom'); break;
-        case 'Chi-Ha-Tan': wrapper.classList.add('glow-chihatan'); break;
-        case 'BellWall': wrapper.classList.add('glow-bellwall'); break;
-        case 'Jatkosota': wrapper.classList.add('glow-jatkosota'); break;
-        case 'Viggen': wrapper.classList.add('glow-viggen'); break;
-        case 'Yogurt': wrapper.classList.add('glow-yogurt'); break;
-        case 'All-Stars': wrapper.classList.add('glow-allstars'); break;
-        default: wrapper.classList.add('glow-gradient'); break;
+        case 'СССР':
+            wrapper.classList.add('glow-pravda');
+            break;
+        case 'Китай':
+            wrapper.classList.add('glow-ooarai');
+            break;
+        case 'Германия':
+            wrapper.classList.add('glow-kuromorimine');
+            break;
+        case 'США':
+            wrapper.classList.add('glow-saunders');
+            break;
+        case 'Великобритания':
+            wrapper.classList.add('glow-stgloriana');
+            break;
+        case 'Италия':
+            wrapper.classList.add('glow-anzio');
+            break;
+        case 'Франция':
+            wrapper.classList.add('glow-bcfreedom');
+            break;
+        case 'Япония':
+            wrapper.classList.add('glow-chihatan');
+            break;
+        case 'Швеция':
+            wrapper.classList.add('glow-viggen');
+            break;
+        default:
+            wrapper.classList.add('glow-gradient');
+            break;
     }
 }
 
@@ -843,7 +859,6 @@ async function loadSchool() {
     updateSortIndicators();
     setBackgroundFromUrl(data.background_path);
     setGlowBorder(data.name);
-    // Обновляем кнопки после загрузки школы (чтобы знать schoolId)
     updateActionButtons();
 }
 
@@ -1077,7 +1092,7 @@ document.getElementById("transferBtn").addEventListener("click", async () => {
     const received = parseInt(document.getElementById("receivedAmount").value) || 0;
     const amount = parseInt(document.getElementById("payAmount").value) || 0;
     if (received <= 0) {
-        alert("Введите сумму, которую должна получить школа");
+        alert("Введите сумму, которую должна получить страна");
         return;
     }
     const fromSchool = schools.find(s => s.id === schoolId);

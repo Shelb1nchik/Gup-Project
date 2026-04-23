@@ -323,6 +323,7 @@ tanks = [
     {"name":"Rhm.-Borsig Waffenträger", "price":520000, "t_type":"ПТ", "rank":4, "br":7.0, "nation":"DE"},
     # СССР
     {"name":"SU-76M", "price":80000, "t_type":"ПТ", "rank":2, "br":2.7, "nation":"USSR"},
+    {"name":"СУ-122-54", "price":80000, "t_type":"ПТ", "rank":2, "br":6.7, "nation":"USSR"},
     {"name":"SU-100P", "price":350000, "t_type":"ПТ", "rank":3, "br":6.0, "nation":"USSR"},
     {"name":"SU-152 (открытая)", "price":320000, "t_type":"ПТ", "rank":3, "br":5.3, "nation":"USSR"},
     {"name":"Object 120 (Taran)", "price":680000, "t_type":"ПТ", "rank":5, "br":8.0, "nation":"USSR"},

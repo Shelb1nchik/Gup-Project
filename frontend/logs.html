@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Логи школы | Girls und Panzer</title>
+<title>Логи страныы | Girls und Panzer</title>
 <style>
 * {
     margin: 0;
@@ -306,7 +306,7 @@ button {
 <button id="openSidebarBtn">☰</button>
 <div id="sideMenu">
     <ul>
-        <li><button id="schoolsBtn">🏫 Школы</button></li>
+        <li><button id="schoolsBtn">🏫 Страны</button></li>
         <li><button id="matchesBtn">📅 Матчи</button></li>
         <li><button id="tanksBtn">🛸 Танки</button></li>
         <li><button id="wheelBtn">🎡 Колесо</button></li>
@@ -321,7 +321,7 @@ button {
 <div class="container">
     <h1>📜 Логи операций</h1>
     <div class="school-selector">
-        <label>Выберите школу: </label>
+        <label>Выберите страну: </label>
         <select id="schoolSelect"></select>
     </div>
     <div id="logMessage" style="text-align: center; padding: 20px; display: none;"></div>
@@ -442,7 +442,7 @@ async function loadSchools() {
         const res = await fetch(`${api}/schools/`);
         const schools = await res.json();
         const select = document.getElementById("schoolSelect");
-        select.innerHTML = '<option value="">-- Выберите школу --</option>';
+        select.innerHTML = '<option value="">-- Выберите страну --</option>';
         schools.forEach(s => {
             const option = document.createElement("option");
             option.value = s.id;
@@ -462,14 +462,14 @@ async function loadSchools() {
                 }
                 loadLogs();
             } else {
-                document.getElementById("logBody").innerHTML = '<td><td colspan="4">Выберите школу<\/td><\/tr>';
+                document.getElementById("logBody").innerHTML = '<td><td colspan="4">Выберите страну<\/td><\/tr>';
                 document.getElementById("logTable").style.display = "table";
                 document.getElementById("pagination").style.display = "none";
                 document.getElementById("logMessage").style.display = "none";
             }
         };
     } catch (err) {
-        console.error("Ошибка загрузки школ:", err);
+        console.error("Ошибка загрузки страны:", err);
     }
 }
 
@@ -486,7 +486,7 @@ async function loadLogs() {
     const url = `${api}/logs/school/${currentSchoolId}?limit=${limit}&offset=${offset}`;
     const res = await authFetch(url);
     if (res.status === 403) {
-        document.getElementById("logBody").innerHTML = '<tr><td colspan="4">⛔ У вас нет прав на просмотр логов этой школы<\/td><\/tr>';
+        document.getElementById("logBody").innerHTML = '<tr><td colspan="4">⛔ У вас нет прав на просмотр логов этой страны<\/td><\/tr>';
         paginationDiv.style.display = "none";
         return;
     }

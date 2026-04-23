@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GuP Schools | Girls und Panzer</title>
+<title>Tank Nations | Girls und Panzer</title>
 <style>
+/* стили полностью сохранены, изменён заголовок в `h1` */
 * {
     margin: 0;
     padding: 0;
@@ -39,8 +40,6 @@ body {
     background: rgba(255, 255, 255, 0.25);
     transform: scale(1.02);
 }
-
-/* Боковое меню */
 #sideMenu {
     position: fixed;
     top: 0;
@@ -87,8 +86,6 @@ body {
     margin: 0 auto;
     padding-top: 20px;
 }
-
-/* === НОВЫЙ СТИЛЬ ДЛЯ БЛОКА АВТОРИЗАЦИИ (FIXED) === */
 .user-info {
     position: fixed;
     top: 20px;
@@ -109,7 +106,6 @@ body {
     border-color: rgba(231, 76, 60, 0.5);
     background: rgba(10, 15, 30, 0.8);
 }
-
 #userNameDisplay {
     background: rgba(0, 0, 0, 0.45);
     padding: 6px 14px;
@@ -121,13 +117,10 @@ body {
     backdrop-filter: blur(4px);
     white-space: nowrap;
 }
-
-/* Кнопки — стиль "glassmorphism" + градиент при ховере */
 .auth-buttons {
     display: flex;
     gap: 10px;
 }
-
 .auth-buttons button {
     background: rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(4px);
@@ -146,7 +139,6 @@ body {
     align-items: center;
     gap: 6px;
 }
-
 .auth-buttons button:hover {
     background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
     border-color: rgba(255, 255, 255, 0.7);
@@ -154,18 +146,14 @@ body {
     box-shadow: 0 10px 18px rgba(231, 76, 60, 0.4);
     color: white;
 }
-
 #logoutBtn {
     background: rgba(192, 57, 43, 0.7);
     border-color: rgba(255, 255, 255, 0.25);
 }
-
 #logoutBtn:hover {
     background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
     transform: translateY(-2px);
 }
-
-/* Заголовок */
 h1 {
     text-align: center;
     font-size: 2.2rem;
@@ -236,14 +224,11 @@ h1 {
     background: #e74c3c;
     border-radius: 10px;
 }
-
-/* Адаптивность для мобильных */
 @media (max-width: 550px) {
     .container { padding: 0 10px; }
     h1 { font-size: 1.8rem; }
     .school-button { padding: 10px 16px; }
     .school-flag-img { width: 22px; height: 22px; }
-
     .user-info {
         top: 12px;
         right: 12px;
@@ -292,7 +277,7 @@ h1 {
 </div>
 
 <div class="container">
-    <h1>⚔️ GuP Schools</h1>
+    <h1>⚔️ Нации танков</h1>
     <div id="schools"></div>
 </div>
 
@@ -344,7 +329,6 @@ async function updateAuthUI() {
         }
     } catch (err) {
         console.error(err);
-        // сброс
         userNameSpan.style.display = "none";
         loginBtn.style.display = "inline-flex";
         registerBtn.style.display = "inline-flex";
@@ -368,25 +352,27 @@ document.getElementById("logoutBtn").onclick = async () => {
 };
 
 const schoolColors = {
-    "Anzio": "#295733", "BC Freedom": "#4c78b9",
-    "BellWall": "#f6b26b", "Chi-Ha-Tan": "#816051", "Jatkosota": "#b3c6d5",
-    "Kuromorimine": "#434b4d", "Ooarai": "#5ca3d7", "Pravda": "#aa0000",
-    "Saunders": "#4b5320", "St.Gloriana": "#e27988", "Viggen": "#fecb02", "Yogurt": "#01a863"
+    "СССР": "#aa0000",
+    "Германия": "#434b4d",
+    "Великобритания": "#e27988",
+    "Франция": "#4c78b9",
+    "Италия": "#295733",
+    "США": "#4b5320",
+    "Япония": "#816051",
+    "Китай": "#5ca3d7",
+    "Швеция": "#fecb02"
 };
 
 const flagFileMap = {
-    "Anzio": "flags/anzio.jpg",
-    "BC Freedom": "flags/bc_freedom.jpg",
-    "BellWall": "flags/bellwall.jpg",
-    "Chi-Ha-Tan": "flags/chi_ha_tan.jpg",
-    "Jatkosota": "flags/jatkosota.jpg",
-    "Kuromorimine": "flags/kuromorimine.jpg",
-    "Ooarai": "flags/oarai.jpg",
-    "Pravda": "flags/pravda.jpg",
-    "Saunders": "flags/saunders.jpg",
-    "St.Gloriana": "flags/stgloriana.jpg",
-    "Viggen": "flags/viggen.jpg",
-    "Yogurt": "flags/yogurt.jpg"
+    "СССР": "flags/ussr.jpg",
+    "Германия": "flags/germany.jpg",
+    "Великобритания": "flags/uk.jpg",
+    "Франция": "flags/france.jpg",
+    "Италия": "flags/italy.jpg",
+    "США": "flags/usa.jpg",
+    "Япония": "flags/japan.jpg",
+    "Китай": "flags/china.jpg",
+    "Швеция": "flags/sweden.jpg"
 };
 
 function getFlagPath(schoolName) {
@@ -403,7 +389,9 @@ async function loadSchools() {
     const data = await res.json();
     const container = document.getElementById("schools");
     container.innerHTML = "";
-    data.forEach(s => {
+    // Отображаем только те школы, которые есть в schoolColors
+    const filteredSchools = data.filter(s => schoolColors[s.name]);
+    filteredSchools.forEach(s => {
         const btn = document.createElement("button");
         btn.className = "school-button";
 
@@ -430,7 +418,7 @@ async function loadSchools() {
 
         btn.appendChild(nameWrapper);
         btn.appendChild(balanceSpan);
-        btn.style.background = `linear-gradient(95deg, ${schoolColors[s.name] || "#2e2e2e"}CC, ${schoolColors[s.name] || "#2e2e2e"}99)`;
+        btn.style.background = `linear-gradient(95deg, ${schoolColors[s.name]}CC, ${schoolColors[s.name]}99)`;
         btn.onclick = () => { window.location.href = `school.html?id=${s.id}`; };
         container.appendChild(btn);
     });
