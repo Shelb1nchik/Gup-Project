@@ -564,6 +564,11 @@ function showDetails(log) {
         }
         if (log.extra_data.score) html += `<p><strong>Счёт:</strong> ${log.extra_data.score}</p>`;
     }
+    // === БЛОК ДЛЯ ПОКУПОК (строчка через запятую) ===
+    if (log.extra_data && log.extra_data.items && log.extra_data.items.length) {
+        const tankNames = log.extra_data.items.map(item => item.tank_name || `Танк ID ${item.tank_id}`).join(", ");
+        html += `<p><strong>Купленные танки:</strong> ${tankNames}</p>`;
+    }
     content.innerHTML = html;
     modal.style.display = "block";
 }
