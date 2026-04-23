@@ -387,7 +387,7 @@ def buy_tanks(
             amount=-total_cost,
             operation_type="tank_purchase",
             description=f"Покупка {sum(item.quantity for item in request.items)} танков",
-            extra_data={"items": [{"tank_id": t.id, "quantity": qty} for t, qty in items_to_buy]},
+            extra_data={"items": [{"tank_id": t.id, "tank_name": t.name, "quantity": qty} for t, qty in items_to_buy]},
             operator_user_id=current_user.id
         )
         db.commit()
@@ -2294,8 +2294,8 @@ def generate_match_message(match: Match, db: Session) -> str:
     # Формируем шапку
     team1_mentions = [m for _, m in team1_schools]
     team2_mentions = [m for _, m in team2_schools]
-    team1_str = ", ".join(team1_mentions)
-    team2_str = ", ".join(team2_mentions)
+    team1_str = " ".join(team1_mentions)
+    team2_str = " ".join(team2_mentions)
     header = f"{team1_str} vs {team2_str}\n"
     header += f"{date_line}\n"
     header += f"{match.mode} - Bo{match.format}\n"
