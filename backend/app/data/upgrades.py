@@ -16,7 +16,7 @@ upgrade_groups = [
     ["M18", "M18 CN", "M18 (IT)", "M18 'Black Cat'", "Hellcat Hell", "Super Hellcat", "T86"], # Хелкаты
     ["M24 Chaffee", "M24 DK", "M24 TL", "M24 (JP)", "M24 (CN)", "M24 (IT)"], # Чафики
     ["Grant I", "Grant I (US)", "M3 Lee", "M-3 Средний", "Ram I", "Ram II", "M4A5", "QF 3.7 Ram"], # Рамы
-    ["LVT(A)(4) (ZIS-2)", "LVT(A)(4) (ZIS-2) (CN)", "LVT(A)(1) (M24)", "LVT(A)(4)", "LVT(A)(1)"], #ЛВТ
+    ["LVT(A)(4) (ZIS-2)", "LVT(A)(4) (ZIS-2) (US)", "LVT(A)(1) (M24)", "LVT(A)(4)", "LVT(A)(1)"], #ЛВТ
     ["T20", "T25"],
 
     # Германия
