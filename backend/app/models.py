@@ -69,6 +69,7 @@ class SchoolTank(Base):
     school_id = Column(Integer, ForeignKey("schools.id"))
     tank_id = Column(Integer, ForeignKey("tanks.id"))
     quantity = Column(Integer, default=0)
+    from_import = Column(Integer, default=0)  # 0 - обычный, 1 - импортный
 
     school = relationship("School", back_populates="tanks")
     tank = relationship("Tank")

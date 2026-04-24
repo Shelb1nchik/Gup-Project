@@ -690,7 +690,7 @@ document.getElementById("adminBtn").onclick = () => { window.location.href = "ad
 document.getElementById("mapBtn").onclick = () => {window.location.href = "japan_map.html"; };
 document.getElementById("ratingBtn").onclick = () => {window.location.href = "rating.html"; };
 
-// ---------- ОСНОВНАЯ ЛОГИКА ШКОЛЫ ----------
+// ---------- ОСНОВНАЯ ЛОГИКА Страны ----------
 const params = new URLSearchParams(window.location.search);
 schoolId = parseInt(params.get("id"));
 
@@ -1005,7 +1005,7 @@ function openTankActionModal(tank) {
 }
 async function loadUpgrades(tankId) {
     try {
-        const response = await fetch(`${api}/tanks/${tankId}/upgrades`);
+        const response = await fetch(`${api}/tanks/${tankId}/upgrades?school_id=${schoolId}`);
         const upgrades = await response.json();
         const select = document.getElementById("upgradeTargetSelect");
         select.innerHTML = '<option value="">-- Выберите улучшение --</option>';

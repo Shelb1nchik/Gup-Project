@@ -531,7 +531,7 @@ button:hover {
 <button id="openSidebarBtn">☰</button>
 <div id="sideMenu">
     <ul>
-        <li><button id="schoolsBtn">🏫 Школы</button></li>
+        <li><button id="schoolsBtn">🏫 Страны</button></li>
         <li><button id="matchesBtn">📅 Матчи</button></li>
         <li><button id="tanksBtn">🛸 Танки</button></li>
         <li><button id="wheelBtn">🎡 Колесо</button></li>
@@ -996,7 +996,7 @@ document.getElementById("saveMatch").onclick = async () => {
             const container = block.querySelector(".tank-container");
             const tankCount = (selectedTanks[container.id] || []).length;
             if (tankCount === 0) {
-                showNotification(`Ошибка: в команде 1 у школы "${schoolName}" не выбран ни один танк!`, true);
+                showNotification(`Ошибка: в команде 1 у Страны "${schoolName}" не выбран ни один танк!`, true);
                 saveBtn.disabled = false;
                 saveBtn.textContent = "💾 Сохранить матч";
                 return;
@@ -1010,7 +1010,7 @@ document.getElementById("saveMatch").onclick = async () => {
             const container = block.querySelector(".tank-container");
             const tankCount = (selectedTanks[container.id] || []).length;
             if (tankCount === 0) {
-                showNotification(`Ошибка: в команде 2 у школы "${schoolName}" не выбран ни один танк!`, true);
+                showNotification(`Ошибка: в команде 2 у Страны "${schoolName}" не выбран ни один танк!`, true);
                 saveBtn.disabled = false;
                 saveBtn.textContent = "💾 Сохранить матч";
                 return;
@@ -1038,7 +1038,7 @@ document.getElementById("saveMatch").onclick = async () => {
         });
 
         if (!team1_ids.length || !team2_ids.length) {
-            showNotification("Выберите школы", true);
+            showNotification("Выберите Страны", true);
             saveBtn.disabled = false;
             saveBtn.textContent = "💾 Сохранить матч";
             return;
@@ -1186,13 +1186,15 @@ function renderCalendar(matches) {
 
             matches.forEach(match => {
                 if (match.calculated) return;
-                const dt = new Date(match.date_time);
-                if (dt.getDate() === i && dt.getMonth() === currentMonth && dt.getFullYear() === currentYear) {
+                // Парсим как UTC (в БД хранится UTC без Z)
+                const mskDate = new Date(match.date_time + 'Z');
+                if (mskDate.getDate() === i && mskDate.getMonth() === currentMonth && mskDate.getFullYear() === currentYear) {
                     const matchDiv = document.createElement("div");
                     matchDiv.className = "match";
                     const team1Names = (match.team1 || []).map(s => s.name).join(", ") || "-";
                     const team2Names = (match.team2 || []).map(s => s.name).join(", ") || "-";
-                    matchDiv.textContent = `${team1Names} vs ${team2Names} | ${dt.toTimeString().slice(0,5)} МСК`;
+                    const timeStr = mskDate.toLocaleTimeString("ru-RU", { hour: '2-digit', minute: '2-digit', timeZone: "Europe/Moscow" });
+                    matchDiv.textContent = `${team1Names} vs ${team2Names} | ${timeStr} МСК`;
                     matchDiv.onclick = () => viewMatch(match.id);
                     d.appendChild(matchDiv);
                 }
@@ -1230,7 +1232,9 @@ async function viewMatch(matchId) {
     const res = await fetch(`${api}/matches/${matchId}`);
     const match = await res.json();
 
-    document.getElementById("vDate").textContent = new Date(match.date_time).toLocaleString("ru-RU");
+    const utcDate = new Date(match.date_time + 'Z');
+    const mskDate = new Date(match.date_time + 'Z');
+    document.getElementById("vDate").textContent = mskDate.toLocaleString("ru-RU", { timeZone: "Europe/Moscow" });
     document.getElementById("vFormat").textContent = match.format || "-";
     document.getElementById("vMode").textContent = match.mode || "-";
     document.getElementById("vMap").textContent = match.map_selection || "-";

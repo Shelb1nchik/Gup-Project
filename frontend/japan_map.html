@@ -353,7 +353,7 @@
 <button id="openSidebarBtn">☰</button>
 <div id="sideMenu">
     <ul>
-        <li><button id="schoolsBtn">🏫 Школы</button></li>
+        <li><button id="schoolsBtn">🏫 Страны</button></li>
         <li><button id="matchesBtn">📅 Матчи</button></li>
         <li><button id="tanksBtn">🛸 Танки</button></li>
         <li><button id="wheelBtn">🎡 Колесо</button></li>
@@ -377,14 +377,14 @@
 <div class="map-container">
     <h1>🗺️ Континент Гарпания · GuP</h1>
     <div style="text-align: center;">
-        <div class="sub">91 территория | Школы на побережье, между ними минимум 3 нейтральные земли</div>
+        <div class="sub">91 территория | Страны на побережье, между ними минимум 3 нейтральные земли</div>
     </div>
     <div class="map-panel">
         <div class="canvas-area">
             <canvas id="territoryCanvas" width="2000" height="1300" style="width:100%; height:auto; aspect-ratio:2000/1300"></canvas>
         </div>
         <div class="legend">
-            <h3>🏆 Школы и территории</h3>
+            <h3>🏆 Страны и территории</h3>
             <div id="legendContent" class="school-list">Загрузка...</div>
             <div style="margin-top: 1rem; padding-top: 0.7rem; border-top: 1px solid #ffcc7733;">
                 <div class="neutral-badge">⚪ Нейтральных территорий: <span id="neutralCount">0</span></div>
@@ -392,7 +392,7 @@
             <button id="resetCaptureBtn" class="reset-btn" style="display: none;">🔄 Сбросить захваты</button>
         </div>
     </div>
-    <footer>Нажмите на территорию школы → переход на страницу школы. За каждые 4 победы школа захватывает ближайшую нейтральную территорию (цвет меняется, название исчезает).</footer>
+    <footer>Нажмите на территорию Страны → переход на страницу Страны. За каждые 4 победы школа захватывает ближайшую нейтральную территорию (цвет меняется, название исчезает).</footer>
 </div>
 
 <script>
@@ -890,7 +890,7 @@ async function loadSchoolsFromAPI() {
             color: schoolColors[s.name] || "#888888"
         }));
     } catch (err) {
-        console.warn("Не удалось загрузить школы из API, использую демо-данные");
+        console.warn("Не удалось загрузить Страны из API, использую демо-данные");
         return [
             { id: 1, name: "Pravda", wins: 12, rating: 1520, color: schoolColors["Pravda"] },
             { id: 2, name: "Ooarai", wins: 10, rating: 1480, color: schoolColors["Ooarai"] },

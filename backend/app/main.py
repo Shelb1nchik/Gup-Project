@@ -12,7 +12,7 @@ import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.date import DateTrigger
 from dotenv import load_dotenv
-from app.data.upgrades import upgrade_tree
+from app.data.upgrades import upgrade_groups
 from app.auth import get_current_user, create_access_token, verify_password, get_password_hash, ACCESS_TOKEN_EXPIRE_MINUTES, decode_access_token
 from random import sample
 import shutil
@@ -234,27 +234,23 @@ def seed():
 
         sync_manufacturer_tanks(db)
 
-        # --- Улучшения (TankUpgrade) из upgrade_tree ---
+        # --- Улучшения (TankUpgrade) из upgrade_groups ---
         if db.query(TankUpgrade).count() == 0:
-            def flatten_tree(tree, parent=None):
-                edges = []
-                for child, subtree in tree.items():
-                    if parent:
-                        edges.append((parent, child))
-                    if subtree:
-                        edges.extend(flatten_tree(subtree, child))
-                return edges
-
             name_to_id = {tank.name: tank.id for tank in db.query(Tank).all()}
-            direct_pairs = flatten_tree(upgrade_tree)
-            for from_name, to_name in direct_pairs:
-                from_id = name_to_id.get(from_name)
-                to_id = name_to_id.get(to_name)
-                if from_id and to_id:
-                    db.add(TankUpgrade(from_tank_id=from_id, to_tank_id=to_id, is_direct=True))
-                    db.add(TankUpgrade(from_tank_id=to_id, to_tank_id=from_id, is_direct=False))
-                else:
-                    print(f"⚠️ Не найдены танки для улучшения: {from_name} -> {to_name}")
+            for group in upgrade_groups:
+                # Переведём названия в ID
+                ids = []
+                for name in group:
+                    tank_id = name_to_id.get(name)
+                    if tank_id:
+                        ids.append(tank_id)
+                    else:
+                        print(f"⚠️ Танк '{name}' не найден в группе {group}")
+                # Добавляем все пары (i != j)
+                for i in range(len(ids)):
+                    for j in range(len(ids)):
+                        if i != j:
+                            db.add(TankUpgrade(from_tank_id=ids[i], to_tank_id=ids[j], is_direct=True))
             db.commit()
     finally:
         db.close()
@@ -348,18 +344,16 @@ def buy_tanks(
 ):
     lock = get_school_lock(request.school_id)
     with lock:
-        # --- ВСЯ СУЩЕСТВУЮЩАЯ ЛОГИКА ПОКУПКИ (без изменений) ---
         school = db.get(School, request.school_id)
         if not school:
             raise HTTPException(404, "Страна не найдена")
 
-        # Проверка прав (как у вас)
         has_right = current_user.is_admin or any(
             r.school_id == request.school_id and r.role in ["commander", "deputy"]
             for r in current_user.roles
         )
         if not has_right:
-            raise HTTPException(403, "Недостаточно прав")
+            raise HTTPException(403, "Недостаточно прав для покупки танков для этой страны")
 
         total_cost = 0
         items_to_buy = []
@@ -371,15 +365,28 @@ def buy_tanks(
             items_to_buy.append((tank, item.quantity))
 
         if school.balance < total_cost:
-            raise HTTPException(400, "Not enough balance")
+            raise HTTPException(400, "Недостаточно средств")
 
         school.balance -= total_cost
+
         for tank, qty in items_to_buy:
-            existing = db.query(SchoolTank).filter_by(school_id=school.id, tank_id=tank.id).first()
+            existing = db.query(SchoolTank).filter_by(
+                school_id=school.id, tank_id=tank.id
+            ).first()
+
+            # Проверка смешивания обычных и импортных экземпляров
             if existing:
-                existing.quantity += qty
+                if existing.from_import == 1:
+                    raise HTTPException(400, f"В школе уже есть импортный экземпляр танка {tank.name}. Нельзя добавить обычный.")
+                else:
+                    existing.quantity += qty
             else:
-                db.add(SchoolTank(school_id=school.id, tank_id=tank.id, quantity=qty))
+                db.add(SchoolTank(
+                    school_id=school.id,
+                    tank_id=tank.id,
+                    quantity=qty,
+                    from_import=0   # обычный танк
+                ))
 
         create_transaction_log(
             db=db,
@@ -470,14 +477,24 @@ from datetime import datetime, timedelta
 
 @app.post("/matches/create/", response_model=MatchResponse)
 def create_match(req: MatchCreateRequest, db: Session = Depends(get_db)):
-    now = datetime.now()
-    if req.date_time < now:
+    now = datetime.now(pytz.UTC)  # текущее время UTC
+    # Преобразуем входящую дату из МСК (наивная строка) в UTC
+    if isinstance(req.date_time, str):
+        naive_moscow = datetime.fromisoformat(req.date_time.replace('Z', '+00:00'))
+    else:
+        naive_moscow = req.date_time
+    msk = pytz.timezone('Europe/Moscow')
+    moscow_dt = msk.localize(naive_moscow)
+    utc_dt = moscow_dt.astimezone(pytz.UTC)
+    req_date_utc = utc_dt.replace(tzinfo=None)  # сохраняем как naive UTC
+
+    if req_date_utc < now.replace(tzinfo=None):
         raise HTTPException(400, "Дата не может быть в прошлом")
-    if req.date_time > now + timedelta(days=7):
+    if req_date_utc > now.replace(tzinfo=None) + timedelta(days=7):
         raise HTTPException(400, "Матч можно создать максимум на 7 дней вперёд")
 
     match = Match(
-        date_time=req.date_time,
+        date_time=req_date_utc,
         mode=req.mode,
         format=str(req.format),
         special_rules=req.special_rules,
@@ -669,10 +686,14 @@ def update_match(match_id: int, req: MatchUpdateRequest, db: Session = Depends(g
         if not match or match.status == "deleted":
             raise HTTPException(404, "Match not found")
         if isinstance(req.date_time, str):
-            date_time_obj = datetime.fromisoformat(req.date_time.replace('Z', '+00:00'))
+            naive_moscow = datetime.fromisoformat(req.date_time.replace('Z', '+00:00'))
         else:
-            date_time_obj = req.date_time
-        match.date_time = date_time_obj
+            naive_moscow = req.date_time
+        msk = pytz.timezone('Europe/Moscow')
+        moscow_dt = msk.localize(naive_moscow)
+        utc_dt = moscow_dt.astimezone(pytz.UTC)
+        req_date_utc = utc_dt.replace(tzinfo=None)
+        match.date_time = req_date_utc
         match.mode = req.mode
         match.format = str(req.format)
         match.special_rules = req.special_rules
@@ -1048,45 +1069,41 @@ def edit_discord_message(webhook_url, message_id, new_content):
 # API: Улучшения, продажи, покупки танков (остальные)
 # ------------------------
 @app.get("/tanks/{tank_id}/upgrades")
-def get_tank_upgrades(tank_id: int, db: Session = Depends(get_db)):
+def get_tank_upgrades(
+    tank_id: int,
+    school_id: int,
+    db: Session = Depends(get_db)
+):
     from_tank = db.get(Tank, tank_id)
     if not from_tank:
         return []
-    all_upgrades = db.query(TankUpgrade).all()
-    graph = {}
-    tank_prices = {t.id: t.price for t in db.query(Tank).all()}
-    for up in all_upgrades:
-        from_id = up.from_tank_id
-        to_id = up.to_tank_id
-        price_from = tank_prices.get(from_id, 0)
-        price_to = tank_prices.get(to_id, 0)
-        diff = abs(price_to - price_from)
-        weight = diff if up.is_direct else diff // 2
-        graph.setdefault(from_id, {})[to_id] = weight
-    import heapq
-    distances = {node: float('inf') for node in graph}
-    distances[tank_id] = 0
-    pq = [(0, tank_id)]
-    while pq:
-        cur_dist, node = heapq.heappop(pq)
-        if cur_dist > distances[node]:
-            continue
-        for neighbor, weight in graph.get(node, {}).items():
-            new_dist = cur_dist + weight
-            if new_dist < distances[neighbor]:
-                distances[neighbor] = new_dist
-                heapq.heappush(pq, (new_dist, neighbor))
+
+    # Проверяем, является ли танк в этой школе импортным
+    school_tank = db.query(SchoolTank).filter(
+        SchoolTank.school_id == school_id,
+        SchoolTank.tank_id == tank_id
+    ).first()
+    is_imported = school_tank.from_import == 1 if school_tank else False
+
+    upgrades = db.query(TankUpgrade).filter(
+        TankUpgrade.from_tank_id == tank_id,
+        TankUpgrade.is_direct == True
+    ).all()
+
     result = []
-    for target_id, cost in distances.items():
-        if target_id == tank_id or cost == float('inf'):
+    for up in upgrades:
+        to_tank = db.get(Tank, up.to_tank_id)
+        if not to_tank:
             continue
-        target_tank = db.get(Tank, target_id)
-        if target_tank:
-            result.append({
-                "to_tank_id": target_tank.id,
-                "to_tank_name": target_tank.name,
-                "cost": cost
-            })
+        # Если танк не импортный, проверяем нацию
+        if not is_imported and to_tank.nation != from_tank.nation:
+            continue
+        cost = abs(to_tank.price - from_tank.price)
+        result.append({
+            "to_tank_id": to_tank.id,
+            "to_tank_name": to_tank.name,
+            "cost": cost
+        })
     return result
 
 
@@ -1145,6 +1162,7 @@ def sell_tank(
         db.commit()
         return {"ok": True, "new_balance": school.balance, "sold_price": sell_price}
 
+
 @app.post("/schools/{school_id}/upgrade_tank")
 def upgrade_tank(
         school_id: int,
@@ -1161,47 +1179,19 @@ def upgrade_tank(
     if not from_tank:
         raise HTTPException(404, "Исходный танк не найден")
 
-    # Проверка прав: админ, командир или зам этой школы
+    to_tank = db.get(Tank, to_tank_id)
+    if not to_tank:
+        raise HTTPException(404, "Целевой танк не найден")
+
+    # Проверка прав
     has_right = current_user.is_admin or any(
         r.school_id == school_id and r.role in ["commander", "deputy"]
         for r in current_user.roles
     )
     if not has_right:
-        raise HTTPException(403, "Недостаточно прав для улучшения танка для этой страны")
+        raise HTTPException(403, "Недостаточно прав")
 
-    # Построение графа улучшений (как в вашем коде)
-    all_upgrades = db.query(TankUpgrade).all()
-    tank_prices = {t.id: t.price for t in db.query(Tank).all()}
-    graph = {}
-    for up in all_upgrades:
-        f_id = up.from_tank_id
-        t_id = up.to_tank_id
-        diff = abs(tank_prices.get(f_id, 0) - tank_prices.get(t_id, 0))
-        weight = diff if up.is_direct else diff // 2
-        graph.setdefault(f_id, {})[t_id] = weight
-
-    import heapq
-    distances = {node: float('inf') for node in graph}
-    distances[from_tank_id] = 0
-    pq = [(0, from_tank_id)]
-    while pq:
-        cur_dist, node = heapq.heappop(pq)
-        if cur_dist > distances[node]:
-            continue
-        for neighbor, weight in graph.get(node, {}).items():
-            new_dist = cur_dist + weight
-            if new_dist < distances[neighbor]:
-                distances[neighbor] = new_dist
-                heapq.heappush(pq, (new_dist, neighbor))
-
-    cost = distances.get(to_tank_id)
-    if cost is None or cost == float('inf'):
-        raise HTTPException(400, "Невозможно улучшить танк (нет пути)")
-
-    school = db.get(School, school_id)
-    if not school:
-        raise HTTPException(404, "Страна не найдена")
-
+    # Находим SchoolTank (исходный танк в инвентаре)
     school_tank = db.query(SchoolTank).filter(
         SchoolTank.school_id == school_id,
         SchoolTank.tank_id == from_tank_id
@@ -1209,31 +1199,62 @@ def upgrade_tank(
     if not school_tank or school_tank.quantity < 1:
         raise HTTPException(400, "У страны нет такого танка для улучшения")
 
+    # Проверка возможности улучшения (прямая связь в таблице TankUpgrade)
+    upgrade_exists = db.query(TankUpgrade).filter(
+        TankUpgrade.from_tank_id == from_tank_id,
+        TankUpgrade.to_tank_id == to_tank_id,
+        TankUpgrade.is_direct == True
+    ).first()
+    if not upgrade_exists:
+        raise HTTPException(400, "Невозможно улучшить данный танк в выбранный")
+
+    # Проверка нации для обычных танков (если не импортный)
+    if school_tank.from_import == 0 and from_tank.nation != to_tank.nation:
+        raise HTTPException(400,
+                            "Нельзя улучшить обычный танк в танк другой нации. Импортный танк может улучшаться во что угодно.")
+
+    # Стоимость = разница в цене
+    cost = abs(to_tank.price - from_tank.price)
+
+    school = db.get(School, school_id)
+    if not school:
+        raise HTTPException(404, "Страна не найдена")
+
     if school.balance < cost:
         raise HTTPException(400, f"Недостаточно средств. Нужно {cost}, доступно {school.balance}")
 
+    # Выполняем улучшение
     school.balance -= cost
     if school_tank.quantity > 1:
         school_tank.quantity -= 1
     else:
         db.delete(school_tank)
 
-    target_tank = db.query(SchoolTank).filter(
+    # Добавляем целевой танк (с таким же from_import, как исходный)
+    target_school_tank = db.query(SchoolTank).filter(
         SchoolTank.school_id == school_id,
         SchoolTank.tank_id == to_tank_id
     ).first()
-    if target_tank:
-        target_tank.quantity += 1
+    if target_school_tank:
+        target_school_tank.quantity += 1
+        # Если типы происхождения различаются, запрещаем смешивание
+        if target_school_tank.from_import != school_tank.from_import:
+            raise HTTPException(400, "Нельзя смешивать обычные и импортные экземпляры одного танка")
     else:
-        db.add(SchoolTank(school_id=school_id, tank_id=to_tank_id, quantity=1))
+        db.add(SchoolTank(
+            school_id=school_id,
+            tank_id=to_tank_id,
+            quantity=1,
+            from_import=school_tank.from_import
+        ))
 
-    # Лог с указанием оператора
+    # Лог операции
     create_transaction_log(
         db=db,
         school_id=school.id,
         amount=-cost,
         operation_type="tank_upgrade",
-        description=f"Улучшение {from_tank.name} → {db.get(Tank, to_tank_id).name}",
+        description=f"Улучшение {from_tank.name} → {to_tank.name}",
         extra_data={"from_tank_id": from_tank_id, "to_tank_id": to_tank_id},
         operator_user_id=current_user.id
     )
@@ -1393,13 +1414,13 @@ def root():
 # Импорт (админские эндпоинты) – с логами и правильным планированием
 # ------------------------
 def run_import_draw(event_id: int):
-    """Функция розыгрыша импорта (вызывается по расписанию или вручную)."""
     db = SessionLocal()
     try:
         event = db.query(ImportEvent).filter(ImportEvent.id == event_id).first()
         if not event or event.is_drawn or not event.is_active:
             print(f"[IMPORT DRAW] Импорт {event_id} уже разыгран или неактивен")
             return
+
         print(f"[IMPORT DRAW] Начинаем розыгрыш импорта {event_id}")
         import_tanks = db.query(ImportTank).filter(ImportTank.event_id == event.id).all()
         for it in import_tanks:
@@ -1409,16 +1430,34 @@ def run_import_draw(event_id: int):
             ).all()
             if not apps:
                 continue
+
             winner = sample(apps, 1)[0]
             school = winner.school
+
             if school.balance >= it.price:
                 school.balance -= it.price
-                school_tank = db.query(SchoolTank).filter_by(school_id=school.id, tank_id=it.tank_id).first()
-                if school_tank:
-                    school_tank.quantity += 1
+
+                # Проверка смешивания: есть ли уже обычный (не импортный) экземпляр?
+                existing = db.query(SchoolTank).filter_by(
+                    school_id=school.id, tank_id=it.tank_id
+                ).first()
+                if existing:
+                    if existing.from_import == 0:
+                        print(f"[IMPORT DRAW] У школы {school.name} уже есть обычный {it.tank.name}. Импортный не добавлен.")
+                        # Можно либо отказать, либо заменить логику. Выбираем отказ.
+                        continue
+                    else:
+                        existing.quantity += 1
                 else:
-                    db.add(SchoolTank(school_id=school.id, tank_id=it.tank_id, quantity=1))
+                    db.add(SchoolTank(
+                        school_id=school.id,
+                        tank_id=it.tank_id,
+                        quantity=1,
+                        from_import=1  # импортный танк
+                    ))
+
                 it.winner_school_id = school.id
+
                 create_transaction_log(
                     db=db,
                     school_id=school.id,
@@ -1427,12 +1466,13 @@ def run_import_draw(event_id: int):
                     description=f"Покупка танка {it.tank.name} через импорт (авто)",
                     reference_id=event.id,
                     reference_type="import",
-                    operator_user_id=winner.user_id,  # <-- добавлено
+                    operator_user_id=winner.user_id,
                     extra_data={"tank_id": it.tank_id, "tank_name": it.tank.name}
                 )
                 print(f"[IMPORT DRAW] Школе {school.name} списано {it.price} за танк {it.tank.name}")
             else:
-                print(f"[IMPORT DRAW] У страны {school.name} недостаточно средств: {school.balance} < {it.price}")
+                print(f"[IMPORT DRAW] У школы {school.name} недостаточно средств: {school.balance} < {it.price}")
+
         event.is_drawn = True
         event.is_active = False
         db.commit()
@@ -1644,11 +1684,13 @@ def draw_import(event_id: int, db: Session = Depends(get_db), current_user: User
         raise HTTPException(400, "Розыгрыш уже проведён")
     if datetime.now() < event.end_date:
         raise HTTPException(400, "Розыгрыш можно проводить только после окончания приёма заявок")
-    # Удаляем задание, если оно было
+
+    # Удаляем запланированную задачу, если была
     job_id = f"draw_import_{event_id}"
     if scheduler.get_job(job_id):
         scheduler.remove_job(job_id)
-    # Выполняем розыгрыш
+
+    # Выполняем розыгрыш в текущем потоке (синхронно)
     run_import_draw(event_id)
     return {"ok": True}
 

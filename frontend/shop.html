@@ -382,7 +382,7 @@ h1 {
 <button id="openSidebarBtn">☰</button>
 <div id="sideMenu">
     <ul>
-        <li><button id="schoolsBtn">🏫 Школы</button></li>
+        <li><button id="schoolsBtn">🏫 Страны</button></li>
         <li><button id="matchesBtn">📅 Матчи</button></li>
         <li><button id="tanksBtn">🛸 Танки</button></li>
         <li><button id="wheelBtn">🎡 Колесо</button></li>
@@ -740,7 +740,7 @@ async function loadShopData() {
 
 async function buySelected() {
     if (!hasRight) {
-        alert("У вас нет прав для покупки танков для этой школы.");
+        alert("У вас нет прав для покупки танков для этой Страны.");
         return;
     }
     const checkboxes = document.querySelectorAll(".tank-checkbox:checked");

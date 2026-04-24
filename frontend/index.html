@@ -255,7 +255,7 @@ h1 {
 <button id="openSidebarBtn">☰</button>
 <div id="sideMenu">
     <ul>
-        <li><button id="schoolsBtn">🏫 Школы</button></li>
+        <li><button id="schoolsBtn">🏫 Страны</button></li>
         <li><button id="matchesBtn">📅 Матчи</button></li>
         <li><button id="tanksBtn">🛸 Танки</button></li>
         <li><button id="wheelBtn">🎡 Колесо</button></li>
@@ -277,7 +277,7 @@ h1 {
 </div>
 
 <div class="container">
-    <h1>⚔️ Нации танков</h1>
+    <h1>⚔️ Нации</h1>
     <div id="schools"></div>
 </div>
 
@@ -383,13 +383,13 @@ function getFlagPath(schoolName) {
 async function loadSchools() {
     const res = await fetch(`${api}/schools/`);
     if (!res.ok) {
-        console.error("Не удалось загрузить школы");
+        console.error("Не удалось загрузить Страны");
         return;
     }
     const data = await res.json();
     const container = document.getElementById("schools");
     container.innerHTML = "";
-    // Отображаем только те школы, которые есть в schoolColors
+    // Отображаем только те Страны, которые есть в schoolColors
     const filteredSchools = data.filter(s => schoolColors[s.name]);
     filteredSchools.forEach(s => {
         const btn = document.createElement("button");
